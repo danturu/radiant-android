@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">radiant.fm</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="placeholder_password">Пароль</string>
+
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Отмена</string>
+    <string name="button_login">Войти</string>
+    <string name="button_repair">Перепривязать</string>
+
+    <string name="message_please_wait">Подождите</string>
+    <string name="message_already_paired">message_pairing_forbidden</string>
+    <string name="message_wrong_password">message_wrong_password</string>
+    <string name="message_server_fault">message_server_error</string>
+    <string name="message_network_error">message_network_error</string>
+</resources>
