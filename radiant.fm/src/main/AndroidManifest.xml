@@ -63,6 +63,8 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".receivers.MediaReceiver" />
+
         <service android:name=".services.MessagesService" />
         <service android:name=".services.DownloadService" />
 

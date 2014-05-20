@@ -20,22 +20,22 @@ public class TracksIndexer extends AbstractIndexer {
     }
 
     @Override
-    public Class getModelClass() {
-        return Track.class;
-    }
-
-    @Override
     public File getDirectory() {
         return new File(context.getExternalFilesDir(null), Track.getDirectoryName());
     }
 
     @Override
-    public boolean shouldBeShuffled() {
-        return true;
+    public Class getModelClass() {
+        return Track.class;
     }
 
     @Override
-    protected SharedPreferences getChecksums() {
-        return context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+    public String getIndexerName() {
+        return TAG;
+    }
+
+    @Override
+    public boolean isBalancedQueue() {
+        return false;
     }
 }

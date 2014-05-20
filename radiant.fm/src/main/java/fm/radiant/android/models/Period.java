@@ -2,7 +2,14 @@ package fm.radiant.android.models;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.joda.time.Seconds;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import fm.radiant.android.comparators.CurrentPeriodComparator;
 import fm.radiant.android.interfaces.Modelable;
 
 public class Period extends Modelable {
@@ -11,6 +18,12 @@ public class Period extends Modelable {
     private int endAt;
 
     private Genre genre;
+
+    public static Period findCurrent(List<Period> periods) {
+        Collections.sort(periods, new CurrentPeriodComparator());
+
+        return periods.get(0);
+    }
 
     public int getDay() {
         return day;
@@ -37,99 +50,13 @@ public class Period extends Modelable {
         return new Interval(startTime.plusWeeks(isNextWeek), endTime.plusWeeks(isNextWeek));
     }
 
-    public void timeUntil() {
+    public long getDelay() {
+        Interval interval = getInterval();
 
+        return interval.getStart().isAfterNow() ? interval.getStartMillis() : interval.getEndMillis();
     }
 
-    public void isNow() {
-
+    public boolean isNow() {
+        return getInterval().containsNow();
     }
-
 }
-
-/*
-    timeRange: (currentTime) ->
-      startTime = Moment(currentTime).startOf("week").day(1 + @get "day").minutes(@get "startAt")
-      endTime   = Moment(currentTime).startOf("week").day(1 + @get "day").minutes(@get "endAt")
-
-      [
-        startTime.add "week", endTime.isBefore currentTime
-        endTime.add   "week", endTime.isBefore currentTime
-      ]
-
-    timeUntil: (currentTime) ->
-      currentTime = Moment     currentTime
-      timeRange   = @timeRange currentTime
-
-      [
-        timeRange[0] - currentTime
-        timeRange[1] - currentTime + 1
-      ]
-
-    isNow: (currentTime) ->
-      currentTime = Moment     currentTime
-      timeRange   = @timeRange currentTime
-
-      timeRange[0] <= currentTime <= timeRange[1]
-@Expose
-    private int day;
-
-    @Expose
-    private int startAt;
-
-    @Expose
-    private int endAt;
-
-    @Expose
-    private int duration;
-
-    @Expose
-    private Genre genre = new Genre();
-
-    @Override
-    public int compareTo(Period another) {
-        return getSecondsUntilStart().compareTo(another.getSecondsUntilStart());
-    }
-
-    public static Period findNext(List<Period> periods) {
-        try {
-            return Collections.min(periods);
-        } catch (NoSuchElementException exception) {
-            return null;
-        }
-    }
-
-    public int getDay() {
-        return day + 1;
-    }
-
-    public DateTime getStartAt() {
-        return getInterval().getStart();
-    }
-
-    public DateTime getEndAt() {
-        return getInterval().getEnd();
-    }
-
-    public Seconds getSecondsUntilStart() {
-        return Seconds.secondsBetween(new DateTime(), getStartAt());
-    }
-
-    public Seconds getSecondsUntilEnd() {
-        return Seconds.secondsBetween(new DateTime(), getEndAt());
-
-
-    public Genre getGenre() {
-        return genre;
-    }
-
-    private Interval getInterval() {
-        DateTime startTime = new DateTime().withDayOfWeek(getDay()).withMillisOfDay(startAt * 60000);
-        DateTime endTime   = new DateTime().withDayOfWeek(getDay()).withMillisOfDay(endAt   * 60000 - 1);
-
-        int offset = endTime.isBeforeNow() ? 7 : 0;
-
-        return new Interval(startTime.plusDays(offset), endTime.plusDays(offset));
-    }
-
- */

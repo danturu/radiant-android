@@ -20,10 +20,9 @@ import java.util.List;
 
 import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.indexer.AbstractIndexer;
-import fm.radiant.android.classes.indexer.TracksIndexer;
 import fm.radiant.android.interfaces.Audioable;
 import fm.radiant.android.interfaces.DownloadEventListener;
-import fm.radiant.android.models.Track;
+import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.NetworkUtils;
 import fm.radiant.android.utils.StorageUtils;
 
@@ -107,7 +106,7 @@ public class Syncer implements DownloadEventListener{
         try {
             indexer.moveToPersisted(model, file);
         } catch (IOException e) {
-            Log.d(TAG, "Fast reindex failed: ", e);
+            Log.d(TAG, indexer.getIndexerName() + " could not be indexed: ", e);
         }
     }
 
@@ -133,8 +132,6 @@ public class Syncer implements DownloadEventListener{
             this.estimatedTime = calculateEstimatedTime();
 
             sendBroadcast();
-
-            Log.d(TAG, "speed " + downloadSpeed.toString() + " percent " + syncedPercent.toString() + " time " + estimatedTime.toString());
         }
     }
 
@@ -147,16 +144,17 @@ public class Syncer implements DownloadEventListener{
 
         for(AbstractIndexer indexer: indexers) {
             indexer.index();
+            LibraryUtils.inspect(indexer);
 
             File directory = indexer.getDirectory();
 
             for (Object model : indexer.getRemotedQueue()) {
                 Download download = new Download(context, (Audioable) model, directory, this);
 
-                if (indexer.shouldBeShuffled()) {
-                    offset = downloads.size() - frozen > 0 ? RandomUtils.nextInt(downloads.size() - frozen) : 0;
+                if (indexer.isBalancedQueue()) {
+                    offset = -1; frozen++;
                 } else {
-                    offset = 0; frozen++;
+                    offset = downloads.size() - frozen > 0 ? RandomUtils.nextInt(downloads.size() - frozen) : 0;
                 }
 
                 downloads.add(offset + frozen, download);
@@ -194,7 +192,7 @@ public class Syncer implements DownloadEventListener{
         }
 
         if (currentState != STATE_SYNCING) {
-            Log.d(TAG, "Requirements check failed: " + Integer.valueOf(errorCode));
+            Log.d(TAG, "must be stopped: " + Integer.valueOf(errorCode));
         }
     }
 

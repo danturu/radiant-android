@@ -1,4 +1,4 @@
-package fm.radiant.android.classes.optimizer;
+package fm.radiant.android.classes.cleaner;
 
 import android.content.Context;
 
@@ -7,10 +7,10 @@ import java.util.Collection;
 
 import fm.radiant.android.models.Track;
 
-public class TracksOptimizer extends AbstractOptimizer{
+public class TracksCleaner extends AbstractCleaner {
     private Context context;
 
-    public TracksOptimizer(Context context, Collection<Track> queue) {
+    public TracksCleaner(Context context, Collection<Track> queue) {
         super(queue);
 
         this.context = context;

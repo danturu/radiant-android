@@ -1,7 +1,10 @@
 package fm.radiant.android.classes.syncer;
 
 import android.content.Context;
+import android.util.Log;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -61,14 +64,9 @@ public class Download {
                 downloadEventListener.onProgress(model, bytesWritten += bytesRead, connection.getContentLength());
             }
 
-            // move file to external storage...
-
             outputStream.flush();
 
-            File destinationFile = model.getFile(directory);
-            FileUtils.copyFile(tempFile, destinationFile);
-
-            downloadEventListener.onSuccess(model, destinationFile);
+            downloadEventListener.onSuccess(model, storeFile(tempFile));
         } catch (IOException exception) {
             downloadEventListener.onFailure(model, exception);
         } finally {
@@ -83,6 +81,19 @@ public class Download {
 
     public void abort() {
         this.aborted = true;
+    }
+
+    private File storeFile(File sourceFile) throws IOException {
+        String hash = new String(Hex.encodeHex(DigestUtils.md5(FileUtils.readFileToByteArray(sourceFile))));
+
+        if (!model.getAudio().getHash().equals(hash)) {
+            throw new IOException("Invalid checksum, download could be corrupted.");
+        }
+
+        File destinationFile = model.getFile(directory);
+        FileUtils.copyFile(sourceFile, destinationFile);
+
+        return destinationFile;
     }
 
     private void throwOnInterrupt() throws InterruptedIOException {

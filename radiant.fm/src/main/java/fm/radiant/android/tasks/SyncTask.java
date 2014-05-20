@@ -39,7 +39,7 @@ public class SyncTask extends AsyncTask<Void, Void, Integer> {
     @Override
     protected void onPostExecute(Integer resultCode) {
         if (resultCode == RESULT_SUCCESS) {
-            Log.d(TAG, "Place successfully synced"); return;
+            Log.i(TAG, "Place successfully synced."); return;
         }
 
         Runnable resync = new Runnable(){

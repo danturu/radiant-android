@@ -6,6 +6,9 @@ public class Audio {
     private String label;
     private String url;
 
+    @JsonProperty("md5")
+    private String hash;
+
     @JsonProperty("duration_in_ms")
     private int time;
 
@@ -18,6 +21,10 @@ public class Audio {
 
     public String getURL() {
         return url;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public int getTime() {

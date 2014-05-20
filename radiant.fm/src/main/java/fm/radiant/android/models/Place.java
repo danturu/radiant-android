@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import fm.radiant.android.interfaces.Modelable;
 import fm.radiant.android.utils.ParseUtils;
@@ -14,9 +15,9 @@ public class Place extends Modelable {
 
     private String name;
 
-    private Collection<Period> periods     = new ArrayList<Period>();
-    private Collection<Campaign> campaigns = new ArrayList<Campaign>();
-    private Collection<Track> tracks       = new ArrayList<Track>();
+    private List<Period> periods     = new ArrayList<Period>();
+    private List<Campaign> campaigns = new ArrayList<Campaign>();
+    private List<Track> tracks       = new ArrayList<Track>();
 
     public static Place parse(String data) throws IOException {
         return ParseUtils.fromJSON(data, Place.class);
@@ -34,20 +35,20 @@ public class Place extends Modelable {
         return name;
     }
 
-    public Collection<Period> getPeriods() {
+    public List<Period> getPeriods() {
         return periods;
     }
 
-    public Collection<Campaign> getCampaigns() {
+    public List<Campaign> getCampaigns() {
         return campaigns;
     }
 
-    public Collection<Track> getTracks() {
+    public List<Track> getTracks() {
         return tracks;
     }
 
-    public Collection<Ad> getAds() {
-        Collection<Ad> ads = new ArrayList<Ad>();
+    public List<Ad> getAds() {
+        List<Ad> ads = new ArrayList<Ad>();
 
         for (Campaign campaign : campaigns) {
             ads.addAll(campaign.getAds());

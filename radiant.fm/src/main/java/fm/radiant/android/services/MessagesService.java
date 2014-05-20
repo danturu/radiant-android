@@ -29,9 +29,13 @@ public class MessagesService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.i(TAG, "Message rec");
+
         try {
             Bundle extras      = intent.getExtras();
             String messageType = MessagesUtils.getMessageType(intent);
+
+            Log.i(TAG, "Message received: " + extras.toString());
 
             if (!GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
                 return;

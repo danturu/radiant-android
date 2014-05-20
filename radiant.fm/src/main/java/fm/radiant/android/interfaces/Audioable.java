@@ -3,9 +3,6 @@ package fm.radiant.android.interfaces;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -19,11 +16,7 @@ public abstract class Audioable extends Modelable {
     }
 
     public String getFilename()  {
-        return new String(Hex.encodeHex(DigestUtils.sha1(getStringId()))) + ".mp3";
-    }
-
-    public int getFilesize() {
-        return getAudio().getSize();
+        return getStringId() + ".mp3";
     }
 
     public Audio getAudio() {

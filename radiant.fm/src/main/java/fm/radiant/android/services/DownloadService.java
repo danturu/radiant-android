@@ -16,34 +16,40 @@ import fm.radiant.android.utils.LibraryUtils;
 public class DownloadService extends IntentService {
     private static final String TAG = "DownloadService";
 
-    private boolean isInterrupted = false;
-    private Syncer syncer;
+    private boolean isStopped = false;
 
     public DownloadService() {
         super("IntentService");
     }
 
     @Override
+    public void onDestroy() {
+        this.isStopped = true;
+    }
+
+    @Override
     protected void onHandleIntent(Intent intent) {
-        if (syncer != null) return;
+        if (isStopped) return;
+        Log.d(TAG, "1");
 
-        Log.d(TAG, "new syncer");
+        buildIndexers(); buildSyncer();
+        Log.d(TAG, "2");
 
-        Place place = AccountUtils.getCurrentPlace();
-
-        TracksIndexer tracksIndexer = new TracksIndexer(getApplicationContext(), place.getTracks());
-        AdsIndexer adsIndexer       = new AdsIndexer(getApplicationContext(), place.getAds());
-
-        LibraryUtils.setTracksIndexer(tracksIndexer);
-        LibraryUtils.setAdsIndexer(adsIndexer);
-        Log.d(TAG, "new syncer 1");
-
-        this.syncer = new Syncer(getApplicationContext(), tracksIndexer, adsIndexer);
-
-        syncer.sync();
-        LibraryUtils.setSyncer(syncer);
+        LibraryUtils.getSyncer().sync();
+        Log.d(TAG, "3");
 
         stopSelf();
+    }
+
+    private void buildIndexers() {
+        Place place = AccountUtils.getCurrentPlace();
+
+        LibraryUtils.setTracksIndexer(new TracksIndexer(getApplicationContext(), place.getTracks()));
+        LibraryUtils.setAdsIndexer(new AdsIndexer(getApplicationContext(), place.getAds()));
+    }
+
+    private void buildSyncer() {
+        LibraryUtils.setSyncer(new Syncer(getApplicationContext(), LibraryUtils.getTracksIndexer(), LibraryUtils.getAdsIndexer()));
     }
 }
 

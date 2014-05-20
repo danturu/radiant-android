@@ -21,13 +21,17 @@ public abstract class Modelable {
         return updatedAt;
     }
 
-    //@Override
-    //public int hashCode() {
-    //    return getId().hashCode();
-    //}
-//
-    //@Override
-    //public boolean equals(Object object) {
-    //    return getClass() == object.getClass() && hashCode() == object.hashCode() && getUpdatedAt().equals(((Modelable) object).getUpdatedAt());
-    //}
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        return getClass() == object.getClass() && hashCode() == object.hashCode() && version().equals(((Modelable) object).version());
+    }
+
+    protected String version() {
+        return updatedAt == null ? createdAt : updatedAt;
+    }
 }

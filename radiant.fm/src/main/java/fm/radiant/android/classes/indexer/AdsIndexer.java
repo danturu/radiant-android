@@ -20,22 +20,22 @@ public class AdsIndexer extends AbstractIndexer {
     }
 
     @Override
-    public Class getModelClass() {
-        return Ad.class;
-    }
-
-    @Override
     public File getDirectory() {
         return new File(context.getExternalFilesDir(null), Ad.getDirectoryName());
     }
 
     @Override
-    public boolean shouldBeShuffled() {
-        return false;
+    public Class getModelClass() {
+        return Ad.class;
     }
 
     @Override
-    protected SharedPreferences getChecksums() {
-        return context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+    public String getIndexerName() {
+        return TAG;
+    }
+
+    @Override
+    public boolean isBalancedQueue() {
+        return true;
     }
 }
