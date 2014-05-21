@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.indexer.AdsIndexer;
 import fm.radiant.android.classes.indexer.TracksIndexer;
 import fm.radiant.android.classes.syncer.Syncer;
@@ -43,13 +42,16 @@ public class DownloadService extends IntentService {
 
     private void buildIndexers() {
         Place place = AccountUtils.getCurrentPlace();
+        Context context = getApplicationContext();
 
-        LibraryUtils.setTracksIndexer(new TracksIndexer(getApplicationContext(), place.getTracks()));
-        LibraryUtils.setAdsIndexer(new AdsIndexer(getApplicationContext(), place.getAds()));
+        LibraryUtils.setTracksIndexer(new TracksIndexer(context, place.getTracks()));
+        LibraryUtils.setAdsIndexer(new AdsIndexer(context, place.getAds()));
     }
 
     private void buildSyncer() {
-        LibraryUtils.setSyncer(new Syncer(getApplicationContext(), LibraryUtils.getTracksIndexer(), LibraryUtils.getAdsIndexer()));
+        Syncer syncer = new Syncer(getApplicationContext());
+        syncer.setIndexers(LibraryUtils.getTracksIndexer(), LibraryUtils.getAdsIndexer());
+        LibraryUtils.setSyncer(syncer);
     }
 }
 

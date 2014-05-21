@@ -1,27 +1,14 @@
 package fm.radiant.android.classes.indexer;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
-import java.io.File;
-import java.util.Collection;
+import java.util.List;
 
 import fm.radiant.android.models.Ad;
 
 public class AdsIndexer extends AbstractIndexer {
-    private static final String TAG = "AdsIndexer";
-
-    private Context context;
-
-    public AdsIndexer(Context context, Collection<Ad> queue) {
-        super(queue);
-
-        this.context = context;
-    }
-
-    @Override
-    public File getDirectory() {
-        return new File(context.getExternalFilesDir(null), Ad.getDirectoryName());
+    public AdsIndexer(Context context, List<Ad> queue) {
+        super(context, queue);
     }
 
     @Override
@@ -30,12 +17,17 @@ public class AdsIndexer extends AbstractIndexer {
     }
 
     @Override
-    public String getIndexerName() {
-        return TAG;
+    public boolean isFrontQueue() {
+        return true;
     }
 
     @Override
-    public boolean isBalancedQueue() {
-        return true;
+    public List<Ad> getPersistedQueue() {
+        return (List<Ad>) super.getPersistedQueue();
+    }
+
+    @Override
+    public List<Ad> getRemotedQueue() {
+        return (List<Ad>) super.getRemotedQueue();
     }
 }

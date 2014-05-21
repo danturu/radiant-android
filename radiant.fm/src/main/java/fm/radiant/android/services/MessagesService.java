@@ -4,15 +4,12 @@ package fm.radiant.android.services;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
-import fm.radiant.android.Radiant;
 import fm.radiant.android.receivers.MessagesReceiver;
 import fm.radiant.android.tasks.SyncTask;
-import fm.radiant.android.tasks.UnpairTask;
 import fm.radiant.android.utils.MessagesUtils;
 
 public class MessagesService extends IntentService {

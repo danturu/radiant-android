@@ -1,12 +1,13 @@
 package fm.radiant.android.models;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.joda.time.Seconds;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import fm.radiant.android.comparators.CurrentPeriodComparator;
@@ -58,5 +59,14 @@ public class Period extends Modelable {
 
     public boolean isNow() {
         return getInterval().containsNow();
+    }
+
+    public List<Integer> collectStyleIds() {
+        return Lists.newArrayList(Iterables.transform(genre.getStyles(), new Function<Style, Integer>() {
+            @Override
+            public Integer apply(Style style) {
+                return style.getId();
+            }
+        }));
     }
 }

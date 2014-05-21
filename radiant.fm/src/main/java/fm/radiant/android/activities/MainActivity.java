@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -15,7 +16,6 @@ import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.cleaner.AdsCleaner;
 import fm.radiant.android.classes.cleaner.TracksCleaner;
 import fm.radiant.android.classes.syncer.Syncer;
-import fm.radiant.android.models.Place;
 import fm.radiant.android.services.DownloadService;
 import fm.radiant.android.tasks.CleanTask;
 import fm.radiant.android.tasks.SubscribeTask;
@@ -24,7 +24,6 @@ import fm.radiant.android.tasks.UnpairTask;
 import fm.radiant.android.utils.AccountUtils;
 import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.MessagesUtils;
-import fm.radiant.android.utils.StorageUtils;
 
 public class MainActivity extends ActionBarActivity {
     private static final String TAG = "MainActivity";
@@ -67,9 +66,11 @@ public class MainActivity extends ActionBarActivity {
 
         broadcastManager.registerReceiver(resyncReceiver, new IntentFilter(Radiant.INTENT_RESYNC));
 
+        Log.d("qaz", Environment.getExternalStorageDirectory().getAbsolutePath());
+        Log.d("qaz", getApplicationContext().getExternalFilesDir(null).getAbsolutePath());
         // PLAYEr
 
-        LibraryUtils.getPlayer().enqueue();
+        //LibraryUtils.getPlayer().enqueue();
     }
 
     @Override

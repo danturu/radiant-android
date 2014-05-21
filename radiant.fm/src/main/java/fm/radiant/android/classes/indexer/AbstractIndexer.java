@@ -1,23 +1,21 @@
 package fm.radiant.android.classes.indexer;
 
-import android.util.Log;
+import android.content.Context;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableLong;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import fm.radiant.android.interfaces.Audioable;
 
 public abstract class AbstractIndexer {
-    private File directory;
+    private Context context;
 
-    private Collection<? extends Audioable> queue;
-    private Collection<? super Audioable> persistedQueue = new ArrayList();
-    private Collection<? super Audioable> remotedQueue   = new ArrayList();
+    private List<? extends Audioable> queue;
+    private List<Audioable> persistedQueue = new ArrayList<Audioable>();
+    private List<Audioable> remotedQueue   = new ArrayList<Audioable>();
 
     private MutableLong persistedBytes = new MutableLong();
     private MutableLong remotedBytes   = new MutableLong();
@@ -25,31 +23,24 @@ public abstract class AbstractIndexer {
 
     private boolean indexed;
 
-    public AbstractIndexer(Collection<? extends Audioable> queue) {
-        this.queue = queue;
+    public AbstractIndexer(Context context, List<? extends Audioable> queue) {
+        this.context = context;
+        this.queue   = queue;
     }
-
-    public abstract File getDirectory();
 
     public abstract Class getModelClass();
 
-    public abstract String getIndexerName();
-
-    public abstract boolean isBalancedQueue();
+    public abstract boolean isFrontQueue();
 
     public void index() throws IOException {
-        this.directory = getDirectory();
-
         for (Audioable model : queue) {
-            File file = model.getFile(directory);
-
             try {
-                if (isPersisted(model, file)) {
+                if (isAudioExists(model)) {
                     addToQueue(persistedQueue, persistedBytes, model);
                 } else {
                     addToQueue(remotedQueue, remotedBytes, model);
                 }
-            } catch (IOException e) {
+            } catch (IOException ignored) {
                 addToQueue(remotedQueue, remotedBytes, model);
             }
         }
@@ -57,7 +48,7 @@ public abstract class AbstractIndexer {
         indexed = true;
     }
 
-    public void moveToPersisted(Audioable model, File file) throws IOException {
+    public void moveToPersisted(Audioable model) throws IOException {
         int filesize = model.getAudio().getSize();
 
         remotedQueue.remove(model);
@@ -71,7 +62,7 @@ public abstract class AbstractIndexer {
         return indexed;
     }
 
-    public Collection<? super Audioable> getPersistedQueue() {
+    public List<? extends Audioable> getPersistedQueue() {
         return persistedQueue;
     }
 
@@ -83,7 +74,7 @@ public abstract class AbstractIndexer {
         return persistedBytes.longValue();
     }
 
-    public Collection<? super Audioable> getRemotedQueue() {
+    public List<? extends Audioable> getRemotedQueue() {
         return remotedQueue;
     }
 
@@ -103,7 +94,7 @@ public abstract class AbstractIndexer {
         return totalBytes.longValue();
     }
 
-    protected void addToQueue(Collection<? super Audioable> queue, MutableLong queueBytes, Audioable model) {
+    protected void addToQueue(List<Audioable> queue, MutableLong queueBytes, Audioable model) {
         int filesize = model.getAudio().getSize();
 
         queue.add(model);
@@ -112,8 +103,8 @@ public abstract class AbstractIndexer {
         totalBytes.add(filesize);
     }
 
-    protected boolean isPersisted(Audioable audio, File file) throws IOException {
-        return file.exists();
+    protected boolean isAudioExists(Audioable model) throws IOException {
+        return model.getFile(context).exists();
     }
 }
 

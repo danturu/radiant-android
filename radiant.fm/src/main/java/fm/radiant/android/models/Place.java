@@ -4,7 +4,6 @@ import android.content.SharedPreferences;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import fm.radiant.android.interfaces.Modelable;

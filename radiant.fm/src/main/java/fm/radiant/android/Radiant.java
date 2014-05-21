@@ -3,10 +3,6 @@ package fm.radiant.android;
 import android.app.Application;
 import android.content.Context;
 
-import fm.radiant.android.classes.indexer.AdsIndexer;
-import fm.radiant.android.classes.indexer.TracksIndexer;
-import fm.radiant.android.classes.player.Player;
-import fm.radiant.android.classes.syncer.Syncer;
 import fm.radiant.android.utils.AccountUtils;
 import fm.radiant.android.utils.CommonUtils;
 import fm.radiant.android.utils.LibraryUtils;

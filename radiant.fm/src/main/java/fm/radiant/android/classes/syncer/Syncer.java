@@ -36,6 +36,8 @@ public class Syncer implements DownloadEventListener{
     public static final int STATE_INDEXING = 5;
     public static final int STATE_SYNCING  = 6;
 
+    private int currentState = STATE_IDLE;
+
     private static final String PROPERTY_STATE          = "state";
     private static final String PROPERTY_SYNCED_PERCENT = "synced_percent";
     private static final String PROPERTY_ESTIMATED_TIME = "estimated_time";
@@ -46,12 +48,12 @@ public class Syncer implements DownloadEventListener{
     private static final int ERROR_NO_SPACE    = 2;
     private static final int ERROR_NO_INTERNET = 3;
 
-    private Context context;
-    private List<AbstractIndexer> indexers;
-    private List<Download> downloads;
+    private final Context context;
 
+    private List<AbstractIndexer> indexers;
+
+    private List<Download> downloads;
     private Download currentDownload;
-    private int currentState;
 
     private Integer syncedPercent = 0;
     private Integer estimatedTime = 0;
@@ -62,8 +64,11 @@ public class Syncer implements DownloadEventListener{
     private List<Integer> speedSamples = new ArrayList<Integer>(Arrays.asList(0, 0, 0, 0, 0));
     private RateLimiter   trackLimiter = RateLimiter.create(1.0);
 
-    public Syncer(Context context, AbstractIndexer... indexers) {
-        this.context  = context;
+    public Syncer(Context context) {
+        this.context = context;
+    }
+
+    public void setIndexers(AbstractIndexer... indexers) {
         this.indexers = Arrays.asList(indexers);
     }
 
@@ -104,9 +109,9 @@ public class Syncer implements DownloadEventListener{
         });
 
         try {
-            indexer.moveToPersisted(model, file);
+            indexer.moveToPersisted(model);
         } catch (IOException e) {
-            Log.d(TAG, indexer.getIndexerName() + " could not be indexed: ", e);
+            Log.d(TAG, indexer.getClass().getSimpleName() + " must be reindexed: ", e);
         }
     }
 
@@ -146,12 +151,10 @@ public class Syncer implements DownloadEventListener{
             indexer.index();
             LibraryUtils.inspect(indexer);
 
-            File directory = indexer.getDirectory();
+            for (Audioable model : indexer.getRemotedQueue()) {
+                Download download = new Download(context, model, this);
 
-            for (Object model : indexer.getRemotedQueue()) {
-                Download download = new Download(context, (Audioable) model, directory, this);
-
-                if (indexer.isBalancedQueue()) {
+                if (indexer.isFrontQueue()) {
                     offset = -1; frozen++;
                 } else {
                     offset = downloads.size() - frozen > 0 ? RandomUtils.nextInt(downloads.size() - frozen) : 0;
@@ -166,8 +169,7 @@ public class Syncer implements DownloadEventListener{
         setState(STATE_SYNCING);
 
         for (Download download : downloads) {
-            checkRequirements();
-            throwOnInterrupt();
+            checkRequirements(); throwOnInterrupt();
 
             (currentDownload = download).start();
         }

@@ -1,27 +1,14 @@
 package fm.radiant.android.classes.indexer;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
-import java.io.File;
-import java.util.Collection;
+import java.util.List;
 
 import fm.radiant.android.models.Track;
 
 public class TracksIndexer extends AbstractIndexer {
-    private static final String TAG = "TracksIndexer";
-
-    private Context context;
-
-    public TracksIndexer(Context context, Collection<Track> queue) {
-        super(queue);
-
-        this.context = context;
-    }
-
-    @Override
-    public File getDirectory() {
-        return new File(context.getExternalFilesDir(null), Track.getDirectoryName());
+    public TracksIndexer(Context context, List<Track> queue) {
+        super(context, queue);
     }
 
     @Override
@@ -30,12 +17,17 @@ public class TracksIndexer extends AbstractIndexer {
     }
 
     @Override
-    public String getIndexerName() {
-        return TAG;
+    public boolean isFrontQueue() {
+        return false;
     }
 
     @Override
-    public boolean isBalancedQueue() {
-        return false;
+    public List<Track> getPersistedQueue() {
+        return (List<Track>) super.getPersistedQueue();
+    }
+
+    @Override
+    public List<Track> getRemotedQueue() {
+        return (List<Track>) super.getRemotedQueue();
     }
 }

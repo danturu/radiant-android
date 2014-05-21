@@ -1,10 +1,7 @@
 package fm.radiant.android.classes.syncer;
 
 import android.content.Context;
-import android.util.Log;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -19,21 +16,20 @@ import java.net.URLConnection;
 import fm.radiant.android.interfaces.Audioable;
 import fm.radiant.android.interfaces.DownloadEventListener;
 import fm.radiant.android.lib.TimeoutInputStream;
+import fm.radiant.android.utils.StorageUtils;
 
 public class Download {
     private static final String TAG = "Download";
 
     private Context context;
     private Audioable model;
-    private File directory;
     private DownloadEventListener downloadEventListener;
 
     private boolean aborted = false;
 
-    public Download(Context context, Audioable model, File directory, DownloadEventListener downloadEventListener) {
+    public Download(Context context, Audioable model, DownloadEventListener downloadEventListener) {
         this.context               = context;
         this.model                 = model;
-        this.directory             = directory;
         this.downloadEventListener = downloadEventListener;
     }
 
@@ -83,15 +79,13 @@ public class Download {
         this.aborted = true;
     }
 
-    private File storeFile(File sourceFile) throws IOException {
-        String hash = new String(Hex.encodeHex(DigestUtils.md5(FileUtils.readFileToByteArray(sourceFile))));
-
-        if (!model.getAudio().getHash().equals(hash)) {
+    private File storeFile(File tempFile) throws IOException {
+        if (!model.getAudio().getHash().equals(StorageUtils.md5(tempFile))) {
             throw new IOException("Invalid checksum, download could be corrupted.");
         }
 
-        File destinationFile = model.getFile(directory);
-        FileUtils.copyFile(sourceFile, destinationFile);
+        File destinationFile = model.getFile(context);
+        FileUtils.copyFile(tempFile, destinationFile);
 
         return destinationFile;
     }

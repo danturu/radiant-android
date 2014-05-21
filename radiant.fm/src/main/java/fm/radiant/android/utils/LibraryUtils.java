@@ -5,8 +5,6 @@ import android.util.Log;
 
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Collection;
-
 import fm.radiant.android.classes.indexer.AbstractIndexer;
 import fm.radiant.android.classes.indexer.AdsIndexer;
 import fm.radiant.android.classes.indexer.TracksIndexer;
@@ -32,7 +30,7 @@ public class LibraryUtils {
     }
 
     public static void inspect(AbstractIndexer indexer) {
-        String tag = indexer.getIndexerName();
+        String tag = indexer.getClass().getSimpleName();
 
         String[] counts = new String[] {
                 StringUtils.leftPad(Integer.toString(indexer.getPersistedCount()), 8),

@@ -1,27 +1,22 @@
 package fm.radiant.android.classes.player;
 
 import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
-
-import org.joda.time.DateTime;
-import org.joda.time.Interval;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
-import fm.radiant.android.classes.syncer.Download;
+import fm.radiant.android.classes.indexer.AdsIndexer;
+import fm.radiant.android.classes.indexer.TracksIndexer;
 import fm.radiant.android.models.Period;
-import fm.radiant.android.models.Place;
 import fm.radiant.android.models.Track;
 import fm.radiant.android.receivers.MediaReceiver;
-import fm.radiant.android.utils.AccountUtils;
+import fm.radiant.android.utils.LibraryUtils;
 
-/**
- * Created by kochnev on 14/05/14.
- */
 public class Player {
     private static final String TAG = "Player";
 
@@ -30,21 +25,36 @@ public class Player {
     public static final int STATE_WAITING = 3;
     public static final int STATE_SYNCING = 4;
 
-    private Context context;
-    private AlarmManager alarmManager;
-    private Place place;
-
-    private Period currentPeriod;
     private int currentState = STATE_STOPPED;
 
-    final private Deck deckA = new Deck();
-    final private Deck deckB = new Deck();
-    final private Deck deckC = new Deck();
+    private final Context context;
+    private final AlarmManager alarmManager;
+    private final ScheduledExecutorService adsTimer = Executors.newSingleThreadScheduledExecutor();
+
+    private final Deck deckA = new Deck();
+    private final Deck deckB = new Deck();
+    private final Deck deckC = new Deck();
+
+    private TracksIndexer tracksIndexer; private AdsIndexer adsIndexer;
+
+    private Period currentPeriod;
+    private List<Period> periods;
 
     public Player(Context context) {
         this.context      = context;
         this.alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        this.place        = AccountUtils.getCurrentPlace();
+    }
+
+    public void setTracksIndexer(TracksIndexer indexer) {
+        this.tracksIndexer = indexer;
+    }
+
+    public void setAdsIndexer(AdsIndexer indexer) {
+        this.adsIndexer = indexer;
+    }
+
+    public void setPeriods(List<Period> periods) {
+        this.periods = periods;
     }
 
     public void play() {
@@ -53,32 +63,36 @@ public class Player {
             return;
         }
 
-       new Thread() {
-           public void run() {
-               try {
-                   deckA.inject(Player.this.getDirectory(), Player.this.getTrack());
-                   deckA.play();
-               } catch (IOException exception) {
-                   Log.e(TAG, "eror", exception);
-               }
-           }
-       }.start();
+        if (deckA.getAudio() == null) {
+            new Thread() {
+                public void run() {
+                    try {
+                        deckA.inject(Player.this.getDirectory(), Player.this.getTrack());
+                        deckA.play();
+                    } catch (IOException exception) {
+                        Log.e(TAG, "eror", exception);
+                    }
+                }
+            }.start();
+        } else {
+            deckA.play();
+        }
     }
 
     public void stop() {
         stop(STATE_STOPPED);
 
-        deckA.stop();
-        deckB.stop();
-        deckC.stop();
+        deckA.pause();
+        deckB.pause();
+        deckC.pause();
     }
 
     protected File getDirectory() {
-        return new File(context.getExternalFilesDir(null), Track.getDirectoryName());
+        return new File("sd");//context.getExternalFilesDir(null), Track.getDirectoryName());
     }
 
     protected Track getTrack() {
-        return place.getTracks().get(5);
+        return Track.findRandom(LibraryUtils.getTracksIndexer().getPersistedQueue(), currentPeriod.collectStyleIds());
     }
 
     public void stop(int state) {
@@ -91,18 +105,23 @@ public class Player {
 
     private void setState(int state) {
         this.currentState = state;
+        sendBroadcast();
     }
 
     public void enqueue() {
-        if (place.getPeriods().isEmpty()) {
-            return;
-        }
+        //this.currentPeriod = Period.findCurrent(place.getPeriods());
 
-        this.currentPeriod = Period.findCurrent(place.getPeriods());
-
-        if (currentState != STATE_STOPPED) {
-            play();
+        if (currentPeriod != null) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, currentPeriod.getDelay(), MediaReceiver.getBroadcast(context));
         }
+    }
+
+    private void sendBroadcast() {
+
+    }
+}
+/*
+
 
         Log.d(TAG, "player");
         Log.d(TAG, "Time now" + new DateTime().toString());
@@ -110,8 +129,4 @@ public class Player {
         Log.d(TAG, "End" + currentPeriod.getInterval().getEnd().toString());
         Log.d(TAG, Long.toString((currentPeriod.getDelay() -  System.currentTimeMillis()) / 1000 / 60) );
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(context, MediaReceiver.class), 0);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, currentPeriod.getDelay(), pendingIntent);
-    }
-
-}
+ */
