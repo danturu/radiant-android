@@ -3,15 +3,12 @@ package fm.radiant.android.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import fm.radiant.android.interfaces.Modelable;
+import fm.radiant.android.interfaces.Model;
 
-public class Genre extends Modelable {
+public class Genre extends Model {
     private String description;
 
     private List<Style> styles = new ArrayList<Style>();
-
-    public Genre() {
-    }
 
     public String getDescription() {
         return description;
@@ -21,7 +18,7 @@ public class Genre extends Modelable {
         return styles;
     }
 
-    public int getColor() {
-        return Integer.valueOf(getId()) % 5 + 1;
+    public int getColorIndex() {
+        return getId() % 5 + 1;
     }
 }

@@ -1,137 +1,114 @@
 package fm.radiant.android.classes.player;
 
+import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.os.Handler;
-import android.util.Log;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import fm.radiant.android.interfaces.Audioable;
+import fm.radiant.android.interfaces.AudioEffect;
+import fm.radiant.android.interfaces.AudioModel;
+import fm.radiant.android.interfaces.DeckEventListener;
 
 public class Deck {
     private final MediaPlayer player;
+    private final ScheduledExecutorService worker;
 
-    public static final int IDLE    = 1;
-    public static final int LOADING = 2;
-    public static final int PLAYING = 3;
-    public static final int PAUSED  = 4;
-    public static final int STOPPED = 5;
+    private AudioModel currentAudio;
+    private float currentVolume;
 
-    private final ScheduledExecutorService fadeWorker = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledFuture fadeTask = null;
-
-    Handler handler = new Handler();
-    private Audioable audio = null;
-
-    List<Cue> cues = new ArrayList<Cue>();
-
-    float currentVolume = 0.0f;
-    int currentState = IDLE;
+    private final List<Cue> cues;
+    private final List<ScheduledFuture> cueTasks;
 
     public Deck() {
-        player = new MediaPlayer();
+        this.player = new MediaPlayer();
+        this.player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        // this.player.setOnPreparedListener(this);
+        // this.player.setOnCompletionListener(this);
+        // this.player.setOnErrorListener(this);
+
+        this.worker = Executors.newSingleThreadScheduledExecutor();
+
+        this.cues     = new ArrayList<Cue>();
+        this.cueTasks = new ArrayList<ScheduledFuture>();
     }
 
-    public void inject(File directory, Audioable audio) throws IOException {
-        eject();
-
-        this.audio = audio;
-
-        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-      //  player.setDataSource(audio.getFile().getAbsolutePath());
-        player.prepare();
-        player.setVolume(0f, 0f);
-
-        currentVolume = 0.0f;
+    public MediaPlayer getPlayer() {
+        return player;
     }
 
-    public void eject() {
+    public AudioModel getAudio() {
+        return currentAudio;
+    }
+
+    public void load(Context context, AudioModel audio, final DeckEventListener deckEventListener) {
+        String filepath = audio.getFile(context).getAbsolutePath();
+
         player.reset();
-    }
 
-    public void play() {
-        for (Cue cue : cues) {
-            handler.postDelayed(cue.getCallback(), cue.getDelay(player.getCurrentPosition(), player.getCurrentPosition()));
-        }
+        player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                deckEventListener.onReady(Deck.this, player);
+            }
+        });
 
-        Log.d("sd", "play");
+        player.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
+                deckEventListener.onFailure(Deck.this, player);
+                return false;
+            }
+        });
+
+        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                deckEventListener.onComplete(Deck.this, player);
+            }
+        });
 
         try {
-            player.start();
-            currentState = PLAYING;
-            fadeTo(1.0f, 3000, null);
-        } catch (IllegalStateException e) {
-
+            player.setDataSource(filepath);
+        } catch (IOException e) {
+            deckEventListener.onFailure(Deck.this, player);
         }
+
+        player.prepareAsync();
+    }
+
+    public void start() {
+        enqueueCues(); player.start();
     }
 
     public void pause() {
-        handler.removeCallbacksAndMessages(null);
-
-        Log.d("p", "puase");
-
-        fadeTo(0.0f, 3000, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    player.pause();
-                    currentState = PAUSED;
-                } catch (IllegalStateException e) {
-
-                }
-            }
-        });
+        dequeueCues(); player.pause();
     }
 
     public void setCue(Cue cue) {
         cues.add(cue);
     }
 
-    public void fadeTo(final float from, final float to, final long delay, final Runnable callback) {
-        if (fadeTask != null && !fadeTask.isDone()) {
-            fadeTask.cancel(true);
+    private void enqueueCues() {
+        int position = player.getCurrentPosition();
+        int duration = player.getDuration();
+
+        for (Cue cue : cues) {
+            worker.schedule(cue, cue.getDelay(position, duration), TimeUnit.MILLISECONDS);
         }
-
-        final float delta = (to - from) / (delay / 50);
-
-        Log.d("delta", Float.toString(delta));
-
-        currentVolume = from;
-        player.setVolume(currentVolume, currentVolume);
-
-        Runnable fadeIn = new Runnable() {
-            @Override
-            public void run() {
-                currentVolume += delta;
-
-                if ((delta == 0.0f) || (delta > 0.0f && currentVolume >= to) || (delta < 0.0f && currentVolume <= to))  {
-                    currentVolume = to;
-
-                    fadeTask.cancel(true);
-
-                    if (callback != null) callback.run();
-                }
-
-                player.setVolume(currentVolume, currentVolume);
-            }
-        };
-
-        fadeTask = fadeWorker.scheduleWithFixedDelay(fadeIn, 0, 50, TimeUnit.MILLISECONDS);
     }
 
-    public void fadeTo(final float to, final long delay, final Runnable callback) {
-        fadeTo(currentVolume, to, delay, callback);
-    }
+    private void dequeueCues() {
+        for (ScheduledFuture cueTask : cueTasks) { cueTask.cancel(true); }
 
-    public Audioable getAudio() {
-        return audio;
+        cueTasks.clear();
     }
 }

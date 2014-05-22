@@ -1,8 +1,8 @@
 package fm.radiant.android.models;
 
-import fm.radiant.android.interfaces.Modelable;
+import fm.radiant.android.interfaces.Model;
 
-public class Style extends Modelable {
+public class Style extends Model {
     private String name;
 
     public String getName() {

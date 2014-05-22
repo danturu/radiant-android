@@ -13,7 +13,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import fm.radiant.android.interfaces.Audioable;
+import fm.radiant.android.interfaces.AudioModel;
 import fm.radiant.android.interfaces.DownloadEventListener;
 import fm.radiant.android.lib.TimeoutInputStream;
 import fm.radiant.android.utils.StorageUtils;
@@ -22,12 +22,12 @@ public class Download {
     private static final String TAG = "Download";
 
     private Context context;
-    private Audioable model;
+    private AudioModel model;
     private DownloadEventListener downloadEventListener;
 
     private boolean aborted = false;
 
-    public Download(Context context, Audioable model, DownloadEventListener downloadEventListener) {
+    public Download(Context context, AudioModel model, DownloadEventListener downloadEventListener) {
         this.context               = context;
         this.model                 = model;
         this.downloadEventListener = downloadEventListener;
@@ -57,21 +57,21 @@ public class Download {
                 throwOnInterrupt();
                 outputStream.write(data, 0, bytesRead);
 
-                downloadEventListener.onProgress(model, bytesWritten += bytesRead, connection.getContentLength());
+                downloadEventListener.onProgress(this, model, bytesWritten += bytesRead, connection.getContentLength());
             }
 
             outputStream.flush();
 
-            downloadEventListener.onSuccess(model, storeFile(tempFile));
+            downloadEventListener.onSuccess(this, model, storeFile(tempFile));
         } catch (IOException exception) {
-            downloadEventListener.onFailure(model, exception);
+            downloadEventListener.onFailure(this, model, exception);
         } finally {
             FileUtils.deleteQuietly(tempFile);
 
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(outputStream);
 
-            downloadEventListener.onComplete(model);
+            downloadEventListener.onComplete(this,model);
         }
     }
 

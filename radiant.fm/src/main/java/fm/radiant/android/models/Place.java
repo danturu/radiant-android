@@ -2,14 +2,18 @@ package fm.radiant.android.models;
 
 import android.content.SharedPreferences;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import fm.radiant.android.interfaces.Modelable;
+import fm.radiant.android.interfaces.Model;
 import fm.radiant.android.utils.ParseUtils;
 
-public class Place extends Modelable {
+public class Place extends Model {
     private static final String TAG = "Place";
 
     private String name;
@@ -47,12 +51,13 @@ public class Place extends Modelable {
     }
 
     public List<Ad> getAds() {
-        List<Ad> ads = new ArrayList<Ad>();
+        Iterable<Ad> ads = Iterables.concat(Iterables.transform(campaigns, new Function<Campaign, List<Ad>>() {
+            @Override
+            public List<Ad> apply(Campaign campaign) {
+                return campaign.getAds();
+            }
+        }));
 
-        for (Campaign campaign : campaigns) {
-            ads.addAll(campaign.getAds());
-        }
-
-        return ads;
+        return Lists.newArrayList(ads);
     }
 }

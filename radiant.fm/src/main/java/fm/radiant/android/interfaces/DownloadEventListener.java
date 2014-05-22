@@ -3,12 +3,14 @@ package fm.radiant.android.interfaces;
 import java.io.File;
 import java.io.IOException;
 
+import fm.radiant.android.classes.syncer.Download;
+
 public interface DownloadEventListener {
-    public void onSuccess(Audioable model, File file);
+    public void onSuccess(Download download, AudioModel model, File file);
 
-    public void onFailure(Audioable model, IOException exception);
+    public void onFailure(Download download, AudioModel model, IOException exception);
 
-    public void onComplete(Audioable model);
+    public void onComplete(Download download, AudioModel model);
 
-    public void onProgress(Audioable model, int receivedBytes, int totalBytes);
+    public void onProgress(Download download, AudioModel model, int receivedBytes, int totalBytes);
 }

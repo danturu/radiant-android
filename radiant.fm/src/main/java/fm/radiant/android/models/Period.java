@@ -11,9 +11,12 @@ import java.util.Collections;
 import java.util.List;
 
 import fm.radiant.android.comparators.CurrentPeriodComparator;
-import fm.radiant.android.interfaces.Modelable;
+import fm.radiant.android.interfaces.Model;
 
-public class Period extends Modelable {
+import static org.joda.time.DateTimeFieldType.dayOfWeek;
+import static org.joda.time.DateTimeFieldType.minuteOfDay;
+
+public class Period extends Model {
     private int day;
     private int startAt;
     private int endAt;
@@ -43,18 +46,24 @@ public class Period extends Modelable {
     }
 
     public Interval getInterval() {
-        DateTime startTime = new DateTime().withDayOfWeek(day + 1).withMillisOfDay(startAt * 60000);
-        DateTime endTime   = new DateTime().withDayOfWeek(day + 1).withMillisOfDay(endAt   * 60000 - 1);
+        DateTime startTime = new DateTime().withField(dayOfWeek(), day + 1).withField(minuteOfDay(), startAt);
+        DateTime endTime   = new DateTime().withField(dayOfWeek(), day + 1).withField(minuteOfDay(), endAt);
 
-        int isNextWeek = endTime.isBeforeNow() ? 1 : 0;
+        if (endTime.isBeforeNow()) {
+            startTime = startTime.plusDays(7); endTime = endTime.plusDays(7);
+        }
 
-        return new Interval(startTime.plusWeeks(isNextWeek), endTime.plusWeeks(isNextWeek));
+        return new Interval(startTime, endTime);
     }
 
     public long getDelay() {
         Interval interval = getInterval();
 
-        return interval.getStart().isAfterNow() ? interval.getStartMillis() : interval.getEndMillis();
+        if (interval.isBeforeNow()) {
+            return interval.getStartMillis();
+        } else {
+            return interval.getEndMillis() - 1;
+        }
     }
 
     public boolean isNow() {
@@ -62,11 +71,13 @@ public class Period extends Modelable {
     }
 
     public List<Integer> collectStyleIds() {
-        return Lists.newArrayList(Iterables.transform(genre.getStyles(), new Function<Style, Integer>() {
+        Iterable<Integer> styleIds = Iterables.transform(genre.getStyles(), new Function<Style, Integer>() {
             @Override
             public Integer apply(Style style) {
                 return style.getId();
             }
-        }));
+        });
+
+        return Lists.newArrayList(styleIds);
     }
 }

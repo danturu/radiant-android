@@ -1,6 +1,6 @@
 package fm.radiant.android.interfaces;
 
-public abstract class Modelable {
+public abstract class Model {
     private int id;
     private String createdAt;
     private String updatedAt;
@@ -28,7 +28,7 @@ public abstract class Modelable {
 
     @Override
     public boolean equals(Object object) {
-        return getClass() == object.getClass() && hashCode() == object.hashCode() && version().equals(((Modelable) object).version());
+        return getClass() == object.getClass() && hashCode() == object.hashCode() && version().equals(((Model) object).version());
     }
 
     protected String version() {

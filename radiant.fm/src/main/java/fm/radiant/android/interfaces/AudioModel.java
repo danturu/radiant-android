@@ -1,7 +1,6 @@
 package fm.radiant.android.interfaces;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -13,17 +12,18 @@ import java.util.Collection;
 
 import fm.radiant.android.models.Audio;
 
-public abstract class Audioable extends Modelable {
-    private static String VALUE_VERSION = "h";
+public abstract class AudioModel extends Model {
+    private static String VALUE_VERSION   = "h";
+    private static String VALUE_EXTENSION = "mp3";
 
-    private Collection<Audio> audio;
+    private Collection<fm.radiant.android.models.Audio> audio;
 
     public String getDirname() {
         return getClass().getSimpleName().toLowerCase();
     }
 
     public String getFilename()  {
-        return getStringId() + ".mp3";
+        return getStringId() + "." + VALUE_EXTENSION;
     }
 
     public File getDirectory(Context context) {
@@ -35,9 +35,9 @@ public abstract class Audioable extends Modelable {
     }
 
     public Audio getAudio() {
-        return Iterables.find(audio, new Predicate<Audio>() {
+        return Iterables.find(audio, new Predicate<fm.radiant.android.models.Audio>() {
             @Override
-            public boolean apply(Audio audio) {
+            public boolean apply(fm.radiant.android.models.Audio audio) {
                 return audio.getLabel().equals(VALUE_VERSION);
             }
         });

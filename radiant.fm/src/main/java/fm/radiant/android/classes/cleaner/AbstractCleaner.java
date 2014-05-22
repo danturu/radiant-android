@@ -13,13 +13,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-import fm.radiant.android.interfaces.Audioable;
+import fm.radiant.android.interfaces.AudioModel;
 
 public abstract class AbstractCleaner {
-    private List<? extends Audioable> queue;
+    private List<? extends AudioModel> queue;
     private File directory;
 
-    public AbstractCleaner(List<? extends Audioable> queue, File directory) {
+    public AbstractCleaner(List<? extends AudioModel> queue, File directory) {
         this.queue     = queue;
         this.directory = directory;
     }
@@ -37,9 +37,9 @@ public abstract class AbstractCleaner {
     }
 
     protected List<String> queueToFilenames() {
-        Iterable<String> filenames = Iterables.transform(queue, new Function<Audioable, String>() {
+        Iterable<String> filenames = Iterables.transform(queue, new Function<AudioModel, String>() {
             @Override
-            public String apply(Audioable model) {
+            public String apply(AudioModel model) {
                 return model.getFilename();
             }
         });

@@ -20,7 +20,7 @@ import java.util.List;
 
 import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.indexer.AbstractIndexer;
-import fm.radiant.android.interfaces.Audioable;
+import fm.radiant.android.interfaces.AudioModel;
 import fm.radiant.android.interfaces.DownloadEventListener;
 import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.NetworkUtils;
@@ -100,7 +100,7 @@ public class Syncer implements DownloadEventListener{
     }
 
     @Override
-    public void onSuccess(final Audioable model, File file) {
+    public void onSuccess(Download download, final AudioModel model, File file) {
         AbstractIndexer indexer = Iterables.find(indexers, new Predicate<AbstractIndexer>() {
             @Override
             public boolean apply(AbstractIndexer abstractIndexer) {
@@ -116,17 +116,17 @@ public class Syncer implements DownloadEventListener{
     }
 
     @Override
-    public void onFailure(Audioable model, final IOException exception) {
+    public void onFailure(Download download, AudioModel model, final IOException exception) {
         Log.e(TAG, "Could not download audio(id=" + model.getStringId() + "): ", exception);
     }
 
     @Override
-    public void onComplete(Audioable model) {
+    public void onComplete(Download download, AudioModel model) {
         this.receivedBytes = 0;
     }
 
     @Override
-    public void onProgress(Audioable model, int receivedBytes, int totalBytes) {
+    public void onProgress(Download download, AudioModel model, int receivedBytes, int totalBytes) {
         if (trackLimiter.tryAcquire()) {
             speedSamples.remove(0);
             speedSamples.add(receivedBytes - this.receivedBytes);
@@ -151,7 +151,7 @@ public class Syncer implements DownloadEventListener{
             indexer.index();
             LibraryUtils.inspect(indexer);
 
-            for (Audioable model : indexer.getRemotedQueue()) {
+            for (AudioModel model : indexer.getRemotedQueue()) {
                 Download download = new Download(context, model, this);
 
                 if (indexer.isFrontQueue()) {
