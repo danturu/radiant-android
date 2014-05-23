@@ -30,4 +30,9 @@ public class TracksIndexer extends AbstractIndexer {
     public List<Track> getRemotedQueue() {
         return (List<Track>) super.getRemotedQueue();
     }
+
+    @Override
+    public List<Track> getQueue() {
+        return (List<Track>) super.getQueue();
+    }
 }

@@ -34,6 +34,10 @@ public abstract class AudioModel extends Model {
         return FileUtils.getFile(getDirectory(context), getFilename());
     }
 
+    public String getSource(Context context) {
+        return getFile(context).exists() ? getFile(context).getAbsolutePath() : getAudio().getURL();
+    }
+
     public Audio getAudio() {
         return Iterables.find(audio, new Predicate<fm.radiant.android.models.Audio>() {
             @Override

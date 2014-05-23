@@ -1,7 +1,5 @@
 package fm.radiant.android.models;
 
-import org.apache.commons.lang.math.RandomUtils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

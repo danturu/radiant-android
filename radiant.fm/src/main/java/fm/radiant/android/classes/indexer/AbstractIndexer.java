@@ -86,6 +86,10 @@ public abstract class AbstractIndexer {
         return remotedBytes.longValue();
     }
 
+    public List<? extends AudioModel> getQueue() {
+        return queue;
+    }
+
     public int getTotalCount() {
         return queue.size();
     }

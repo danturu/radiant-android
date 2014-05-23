@@ -66,11 +66,10 @@ public class MainActivity extends ActionBarActivity {
 
         broadcastManager.registerReceiver(resyncReceiver, new IntentFilter(Radiant.INTENT_RESYNC));
 
-        Log.d("qaz", Environment.getExternalStorageDirectory().getAbsolutePath());
-        Log.d("qaz", getApplicationContext().getExternalFilesDir(null).getAbsolutePath());
         // PLAYEr
 
-        //LibraryUtils.getPlayer().enqueue();
+        LibraryUtils.getPlayer().setPeriods(AccountUtils.getCurrentPlace().getPeriods());
+        LibraryUtils.getPlayer().enqueuePeriod();
     }
 
     @Override
@@ -151,6 +150,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void play(View view) {
+        LibraryUtils.getPlayer().setTracksIndexer(LibraryUtils.getTracksIndexer());
         LibraryUtils.getPlayer().play();
     }
 

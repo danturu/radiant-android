@@ -14,7 +14,7 @@ import fm.radiant.android.comparators.CurrentPeriodComparator;
 import fm.radiant.android.interfaces.Model;
 
 import static org.joda.time.DateTimeFieldType.dayOfWeek;
-import static org.joda.time.DateTimeFieldType.minuteOfDay;
+import static org.joda.time.DateTimeFieldType.millisOfDay;
 
 public class Period extends Model {
     private int day;
@@ -46,8 +46,8 @@ public class Period extends Model {
     }
 
     public Interval getInterval() {
-        DateTime startTime = new DateTime().withField(dayOfWeek(), day + 1).withField(minuteOfDay(), startAt);
-        DateTime endTime   = new DateTime().withField(dayOfWeek(), day + 1).withField(minuteOfDay(), endAt);
+        DateTime startTime = new DateTime().withField(dayOfWeek(), day + 1).withField(millisOfDay(), startAt * 60 * 1000);
+        DateTime endTime   = new DateTime().withField(dayOfWeek(), day + 1).withField(millisOfDay(), endAt   * 60 * 1000 - 1);
 
         if (endTime.isBeforeNow()) {
             startTime = startTime.plusDays(7); endTime = endTime.plusDays(7);
@@ -62,7 +62,7 @@ public class Period extends Model {
         if (interval.isBeforeNow()) {
             return interval.getStartMillis();
         } else {
-            return interval.getEndMillis() - 1;
+            return interval.getEndMillis();
         }
     }
 

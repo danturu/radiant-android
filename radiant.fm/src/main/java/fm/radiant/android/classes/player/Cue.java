@@ -10,6 +10,6 @@ public abstract class Cue implements Callable {
     }
 
     public int getDelay(int position, int duration) {
-        return position - time + (time < 0 ? duration : 0);
+        return time - position + (time < 0 ? duration : 0);
     }
 }

@@ -21,7 +21,7 @@ public class MediaReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Player player = LibraryUtils.getPlayer();
 
-        player.enqueue();
+        player.enqueuePeriod();
         player.play();
     }
 }
