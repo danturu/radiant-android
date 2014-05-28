@@ -2,6 +2,7 @@ package fm.radiant.android.models;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.gson.annotations.Expose;
 
 import org.joda.time.DateTime;
 
@@ -12,11 +13,16 @@ import java.util.List;
 import fm.radiant.android.lib.Model;
 
 public class Campaign extends Model {
+    @Expose
     private int periodicity;
+
+    @Expose
     private int selectivity;
 
+    @Expose
     private boolean ducked;
 
+    @Expose
     private List<Ad> ads = new ArrayList<Ad>();
 
     public static Campaign sample(List<Campaign> campaigns) {
@@ -28,7 +34,7 @@ public class Campaign extends Model {
         return Iterables.find(cloned, new Predicate<Campaign>() {
             @Override
             public boolean apply(Campaign campaign) {
-                return (campaign.getPeriodicity() % (now.getMinuteOfHour() - (now.getMinuteOfHour() % 5))) == 0;
+                return ((now.getMinuteOfHour() - (now.getMinuteOfHour() % 5)) % campaign.getPeriodicity()) == 0;
             }
         }, null);
     }
@@ -41,7 +47,7 @@ public class Campaign extends Model {
         List<Ad> cloned = new ArrayList<Ad>(ads);
         Collections.shuffle(cloned);
 
-        return cloned.subList(0, selectivity);
+        return cloned;//.subList(0, selectivity);
     }
 
     public int getPeriodicity() {

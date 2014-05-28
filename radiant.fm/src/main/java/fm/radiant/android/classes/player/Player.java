@@ -3,11 +3,18 @@ package fm.radiant.android.classes.player;
 import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
+import android.util.SparseIntArray;
+
+import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import fm.radiant.android.Radiant;
@@ -23,6 +30,8 @@ import fm.radiant.android.receivers.MediaReceiver;
 import fm.radiant.android.utils.NetworkUtils;
 
 public class Player {
+    private static final String TAG = "Place";
+
     public static final int STATE_PLAYING = 1;
     public static final int STATE_STOPPED = 2;
     public static final int STATE_WAITING = 3;
@@ -32,9 +41,10 @@ public class Player {
 
     private static final String PROPERTY_STATE = "state";
 
-    private static final int VALUE_FADE_DURATION = 2000;
+    private static final int VALUE_FADE_DURATION = 3000;
 
     private final Context context;
+    private final SharedPreferences preferences;
 
     private final AlarmManager periodsTimer;
     private final Handler campaignsTimer;
@@ -54,8 +64,13 @@ public class Player {
     private Period currentPeriod;
     private float currentVolume;
 
+    private  AudioManager audioManager;
+
+    private SparseIntArray lastPlays = new SparseIntArray();
+
     public Player(final Context context) {
-        this.context = context;
+        this.context     = context;
+        this.preferences = context.getSharedPreferences(TAG + "plays", Context.MODE_PRIVATE );
 
         this.periodsTimer   = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         this.campaignsTimer = new Handler();
@@ -67,13 +82,35 @@ public class Player {
         this.currentDeck   = deckA;
         this.currentVolume = 1.0f;
 
+        // try {
+        //     lastPlays = ParseUtils.fromJSON(preferences.getString("lastplays", ""), SparseIntArray.class);
+        // } catch (IOException e) {
+        //     lastPlays = new SparseIntArray();
+        //     Log.e("Player", "sparsead", e);
+        // }
+//
         deckEventListener = new DeckEventListener() {
             @Override
             public void onReady(final Deck nextDeck, MediaPlayer player, AudioModel audio) {
-                if (currentDeck.getPlayer().isPlaying()) {
+                nextDeck.start();
 
+                lastPlays.put(audio.getId(), (int) (new Date().getTime() / 1000));
+
+                Log.d("player", "s " + lastPlays.size());
+                //try {
+                //    preferences.edit().putString("lastplays", ParseUtils.toJSON(lastPlays)).commit();
+                //} catch (IOException e) {
+                //    e.printStackTrace();
+                //}
+
+                if (currentDeck != nextDeck && currentDeck.getPlayer().isPlaying()) {
+                     currentDeck.fade(currentVolume, 0.0f, VALUE_FADE_DURATION, null);
+                     nextDeck.fade(0.0f, currentVolume, VALUE_FADE_DURATION, null);
+                } else {
+                     nextDeck.setVolume(Player.this.currentVolume);
                 }
-                mix(nextDeck, currentDeck);
+
+                currentDeck = nextDeck;
             }
 
             @Override
@@ -92,20 +129,23 @@ public class Player {
             }
         };
 
-        deckA.setCue(new Cue(-15000) {
+        deckA.setCue(new Cue(15000) {
             @Override
             public void run() {
+                Log.d("player", "deckB.load");
                 deckB.load(selectTrackForCurrentPeriod(), deckEventListener);
             }
         });
 
-        deckB.setCue(new Cue(-15000) {
+        deckB.setCue(new Cue(15000) {
             @Override
             public void run() {
+                Log.d("player", "deckA.load");
                 deckA.load(selectTrackForCurrentPeriod(), deckEventListener);
             }
         });
 
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     public void setTracksIndexer(TracksIndexer indexer) {
@@ -120,7 +160,7 @@ public class Player {
         this.periods = periods;
     }
 
-    public void setCampaigns(List<Campaign> periods) {
+    public void setCampaigns(List<Campaign> campaigns) {
         this.campaigns = campaigns;
     }
 
@@ -130,21 +170,31 @@ public class Player {
             return;
         }
 
-        // if (!NetworkUtils.isNetworkConnected() && tracksIndexer.getRatio() < 0.5) {
-        //     return;
-        // }
+        // failed
 
-        //if (currentDeck.getPlayer().isPlaying()) {
-        //    return;
-        //}
-//
-        //if (currentDeck.getAudio() == null || currentPeriod.collectStyleIds().contains(((Track) currentDeck.getAudio()).getStyleId())) {
-        //    currentDeck.load(selectTrackForCurrentPeriod(), deckEventListener);
-        //} else {
-        //    currentDeck.start(0.0f, currentVolume, 3000);
-        //}
-//
-        //deckEventListener.onReady(null, null, null);
+        double persistedMinutes = 0;
+
+        for (Integer styleId : currentPeriod.collectStyleIds()) {
+            persistedMinutes += tracksIndexer.getPersistedMinutes(styleId);
+        }
+
+        if (!NetworkUtils.isNetworkConnected() && (persistedMinutes / currentPeriod.getDuration() < 0.3)) {
+            stop(STATE_FAILED);
+            return;
+        }
+
+        // stream and play
+
+        if (currentDeck.getPlayer().isPlaying()) {
+            return;
+        }
+
+        if (currentDeck.getAudio() == null || !currentPeriod.collectStyleIds().contains(((Track) currentDeck.getAudio()).getStyleId())) {
+            currentDeck.load(selectTrackForCurrentPeriod(), deckEventListener);
+        } else {
+            currentDeck.setVolume(currentVolume);
+            currentDeck.start();
+        }
 
         advertise();
 
@@ -159,6 +209,8 @@ public class Player {
         deckA.pause();
         deckB.pause();
         deckC.pause();
+
+        this.currentVolume = 1.0f;
     }
 
     public void stop() {
@@ -177,38 +229,65 @@ public class Player {
         return currentState;
     }
 
-    private void mix(Deck... decks) {
-        decks[0].start();
+    public void setVolume(int level) {
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int volume    = Math.round(level * maxVolume / 100);
 
-        decks[0].fade(0.0f, currentVolume, VALUE_FADE_DURATION, null);
-        decks[1].fade(currentVolume, 0.0f, VALUE_FADE_DURATION, null);
-
-        this.currentDeck = decks[0];
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
     }
 
-    // if (adsIndexer.getRemotedCount() != 0) {
-    //     campaignsTimer.postDelayed(this, 300000);
-    //     return;
-    // }
+    public int getVolume() {
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int volume    = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+        return Math.round(volume / maxVolume * 100);
+    }
 
     private void advertise() {
+        // if (adsIndexer.getRemotedCount() != 0) {
+        //     campaignsTimer.postDelayed(this, 300000);
+        //     return;
+        // }
+
         Runnable advertiseIteration = new Runnable() {
             @Override
             public void run() {
-                final Campaign campaign = Campaign.sample(campaigns);
+                Log.d("player", "player now playing ads. time: " + new DateTime().toString());
+
+                final Campaign campaign = campaigns.get(0);//  Campaign.sample(campaigns);
+
+                if (campaign == null) {
+                    // advertise
+                    return;
+                }
+                Log.d("player", "com" + campaign.randomAds().size());
+
+                boolean first = true;
 
                 deckC.load(campaign.randomAds(), new DeckEventListener() {
+                    boolean fade = true;
+
                     @Override
                     public void onReady(Deck deck, MediaPlayer player, AudioModel audio) {
-                        currentVolume = campaign.isDucked() ? 0.3f : 0.0f;
+                        if (fade == false) {
+                            deckC.start();
+                            return;
+                        }
+                        fade = false;
 
-                        deckA.fade(currentVolume, VALUE_FADE_DURATION, null);
-                        deckB.fade(currentVolume, VALUE_FADE_DURATION, null);
+                        Log.d("sdc", "onReady");
+
+                        Player.this.currentVolume = campaign.isDucked() ? 0.2f : 0.0f;
+
+                        if (campaign.isDucked()) Log.d("ducked", "ducked");
+
+                        currentDeck.fade(currentVolume, VALUE_FADE_DURATION, null);
 
                         campaignsTimer.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 deckC.start();
+                                deckC.getPlayer().setVolume(0, 0);
                             }
                         }, VALUE_FADE_DURATION);
                     }
@@ -220,23 +299,24 @@ public class Player {
 
                     @Override
                     public void onFailure(Deck deck, MediaPlayer player, AudioModel audio, IOException exception) {
+                        Log.e("sd", "sd", exception);
                         // no implementation necessary...
                     }
 
                     @Override
                     public void onComplete(Deck deck, MediaPlayer player) {
-                        currentVolume = 1.0f;
+                        currentDeck.fade(currentVolume = 1.0f, VALUE_FADE_DURATION, null);
 
-                        deckA.fade(currentVolume, VALUE_FADE_DURATION, null);
-                        deckB.fade(currentVolume, VALUE_FADE_DURATION, null);
-
-                        advertise();
+                        // advertise();
                     }
                 });
             }
         };
 
-        campaignsTimer.postDelayed(advertiseIteration, 300000);
+        Log.d("adverd", "asad");
+
+        campaignsTimer.removeCallbacksAndMessages(null);
+        campaignsTimer.postDelayed(advertiseIteration, 5000);
     }
 
     private void setState(int state) {
@@ -249,7 +329,17 @@ public class Player {
     }
 
     private Track selectTrackForCurrentPeriod() {
-        return Track.selectRandom(tracksIndexer.getQueue(), currentPeriod.collectStyleIds());
+        double persistedMinutes = 0;
+
+        for (Integer styleId : currentPeriod.collectStyleIds()) {
+            persistedMinutes += tracksIndexer.getPersistedMinutes(styleId);
+        }
+
+        if (persistedMinutes / currentPeriod.getDuration() > 0.7) {
+            return Track.selectRandom(tracksIndexer.getPersistedQueue(), currentPeriod.collectStyleIds(), lastPlays);
+        } else {
+            return Track.selectRandom(tracksIndexer.getQueue(), currentPeriod.collectStyleIds(), lastPlays);
+        }
     }
 
     private List<Ad> selectAdsForCurrentPeriod() {

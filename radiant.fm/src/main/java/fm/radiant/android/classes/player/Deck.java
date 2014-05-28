@@ -1,13 +1,13 @@
 package fm.radiant.android.classes.player;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
@@ -18,8 +18,8 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
     private final Context context;
     private final MediaPlayer player;
 
-    private AudioModel currentAudio;
     private DeckEventListener currentEventListener;
+    private AudioModel currentTrack;
     private float currentVolume;
 
     private final Stack<AudioModel> tracks;
@@ -38,11 +38,13 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
 
         this.tracks = new Stack<AudioModel>();
         this.cues   = new ArrayList<Cue>();
+
+        this.currentVolume = 1.0f;
     }
 
     @Override
     public void onPrepared(MediaPlayer player) {
-        currentEventListener.onReady(this, player, currentAudio);
+        currentEventListener.onReady(this, player, currentTrack);
     }
 
     @Override
@@ -50,13 +52,13 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         if (tracks.isEmpty()) {
             currentEventListener.onComplete(this, player);
         } else {
-            prepareNext(context, tracks.pop());
+            prepare(context, tracks.pop());
         }
     }
 
     @Override
     public boolean onError(MediaPlayer player, int what, int extra) {
-        currentEventListener.onFailure(this, player, currentAudio, new IOException("Error code: " + extra));
+        currentEventListener.onFailure(this, player, currentTrack, new IOException("Error code: " + extra));
         return false;
     }
 
@@ -64,42 +66,38 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         return player;
     }
 
-    public float getVolume() {
-        return currentVolume;
-    }
-
     public AudioModel getAudio() {
-        return currentAudio;
+        return currentTrack;
     }
 
-    public void load(final List<? extends AudioModel> tracks, final DeckEventListener eventListener) {
+    public void load(final List<? extends AudioModel> tracks, DeckEventListener eventListener) {
         this.currentEventListener = eventListener;
-        resetStackWith(tracks);
+        enqueue(tracks);
 
         if (tracks.isEmpty()) {
             currentEventListener.onComplete(this, player);
         } else {
-            prepareNext(context, this.tracks.pop());
+            prepare(context, this.tracks.pop());
         }
     }
 
-    public void load(AudioModel track, final DeckEventListener deckEventListener) {
+    public void load(AudioModel track, DeckEventListener deckEventListener) {
         load(Arrays.asList(track), deckEventListener);
     }
 
-    public void start() {
-        if (currentAudio == null) return;
+    public synchronized void start() {
+        if (currentTrack == null) return;
 
         enqueueCues(); player.start();
     }
 
-    public void pause() {
-        if (currentAudio == null || !player.isPlaying()) return;
+    public synchronized void pause() {
+        if (currentTrack == null || !player.isPlaying()) return;
 
         dequeueCues(); player.pause();
     }
 
-    public void fade(final float from, final float to, final int duration, final Runnable callback) {
+    public synchronized void fade(final float from, final float to, final int duration, final Runnable callback) {
         Runnable faderIteration = new Runnable() {
             float delta = (to - from) / duration * 30;
 
@@ -111,6 +109,7 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
                     fader.postDelayed(this, 30);
                 } else {
                     fader.post(callback);
+                    Deck.this.currentVolume = to;
                 }
 
                 player.setVolume(currentVolume, currentVolume);
@@ -123,8 +122,12 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         fader.post(faderIteration);
     }
 
-    public void fade(final float to, int duration, final Runnable callback) {
+    public synchronized void fade(final float to, int duration, final Runnable callback) {
         fade(currentVolume, to, duration, callback);
+    }
+
+    public void setVolume(float volume) {
+        this.currentVolume = volume; player.setVolume(volume, volume);
     }
 
     public void setCue(Cue cue) {
@@ -144,24 +147,24 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         timer.removeCallbacksAndMessages(null);
     }
 
-    protected void prepareNext(Context context, AudioModel audio) {
-        this.currentAudio  = audio;
-        this.currentVolume = 1.0f;
+    protected void prepare(Context context, AudioModel audio) {
+        this.currentTrack = audio;
 
         player.reset();
+        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
         player.setVolume(currentVolume, currentVolume);
 
         try {
             player.setDataSource(audio.getSource(context));
             player.prepareAsync();
 
-            currentEventListener.onNext(this, player, currentAudio);
+            currentEventListener.onNext(this, player, currentTrack);
         } catch (IOException exception) {
-            currentEventListener.onFailure(this, player, currentAudio, exception);
+            currentEventListener.onFailure(this, player, currentTrack, exception);
         }
     }
 
-    private void resetStackWith(List<? extends AudioModel> tracks) {
+    private void enqueue(List<? extends AudioModel> tracks) {
         this.tracks.clear();
 
         for (AudioModel track : tracks) {

@@ -1,13 +1,16 @@
 package fm.radiant.android.models;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import fm.radiant.android.lib.Model;
@@ -16,11 +19,20 @@ import fm.radiant.android.utils.ParseUtils;
 public class Place extends Model {
     private static final String TAG = "Place";
 
+    @Expose
     private String name;
 
-    private List<Period> periods     = new ArrayList<Period>();
-    private List<Campaign> campaigns = new ArrayList<Campaign>();
-    private List<Track> tracks       = new ArrayList<Track>();
+    @Expose
+    private String cachedAt;
+
+    @Expose
+    private List<Period> periods = Collections.emptyList();
+
+    @Expose
+    private List<Campaign> campaigns = Collections.emptyList();
+
+    @Expose
+    private List<Track> tracks = Collections.emptyList();
 
     public static Place parse(String data) throws IOException {
         return ParseUtils.fromJSON(data, Place.class);
@@ -32,6 +44,14 @@ public class Place extends Model {
 
     public static void store(SharedPreferences storage, String data) {
         storage.edit().putString(TAG, data).commit();
+    }
+
+    @Override
+    protected String version() {
+        //return cachedAt;
+        Log.d("scdsc", "s" + cachedAt);
+
+        return super.version();
     }
 
     public String getName() {

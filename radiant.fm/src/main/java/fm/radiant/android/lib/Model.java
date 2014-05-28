@@ -1,8 +1,15 @@
 package fm.radiant.android.lib;
 
+import com.google.gson.annotations.Expose;
+
 public abstract class Model {
+    @Expose
     private int id;
+
+    @Expose
     private String createdAt;
+
+    @Expose
     private String updatedAt;
 
     public Integer getId() {

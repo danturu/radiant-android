@@ -3,6 +3,7 @@ package fm.radiant.android.models;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.gson.annotations.Expose;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
@@ -17,10 +18,19 @@ import static org.joda.time.DateTimeFieldType.dayOfWeek;
 import static org.joda.time.DateTimeFieldType.millisOfDay;
 
 public class Period extends Model {
+    @Expose
     private int day;
+
+    @Expose
+    private int duration;
+
+    @Expose
     private int startAt;
+
+    @Expose
     private int endAt;
 
+    @Expose
     private Genre genre;
 
     public static Period findCurrent(List<Period> periods) {
@@ -31,6 +41,10 @@ public class Period extends Model {
 
     public int getDay() {
         return day;
+    }
+
+    public int getDuration() {
+        return duration;
     }
 
     public int getStartAt() {

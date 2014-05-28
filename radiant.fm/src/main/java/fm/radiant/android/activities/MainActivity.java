@@ -1,14 +1,16 @@
 package fm.radiant.android.activities;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.View;
+import android.widget.SeekBar;
 
 import fm.radiant.android.R;
 import fm.radiant.android.Radiant;
@@ -32,8 +34,6 @@ public class MainActivity extends ActionBarActivity {
     BroadcastReceiver resyncReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "sdckmsdkcmdk");
-
             performCleanTask();
             restartDownloadService();
         }
@@ -47,9 +47,30 @@ public class MainActivity extends ActionBarActivity {
             startLoginActivity(); return;
         }
 
+        //setVolumeControlStream(AudioManager.STREAM_MUSIC);
         setContentView(R.layout.activity_main);
 
         // BOOTSTRAP
+
+        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+        int result = manager.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+                                                   @Override
+                                                   public void onAudioFocusChange(int i) {
+
+                                                   }
+                                               },
+                // Use the music stream.
+                AudioManager.STREAM_MUSIC,
+                // Request permanent focus.
+                AudioManager.AUDIOFOCUS_GAIN);
+
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            manager.registerMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
+            // Start playback.
+        }
+
+       // manager.registerMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
 
         if (MessagesUtils.canReceiveMessages(this)) {
             new SyncTask().execute();
@@ -68,23 +89,49 @@ public class MainActivity extends ActionBarActivity {
         // PLAYEr
 
         LibraryUtils.getPlayer().setPeriods(AccountUtils.getCurrentPlace().getPeriods());
+        LibraryUtils.getPlayer().setCampaigns(AccountUtils.getCurrentPlace().getCampaigns());
         LibraryUtils.getPlayer().schedule();
+
+        SeekBar volumeSlider = (SeekBar) findViewById(R.id.slider_volume);
+        volumeSlider.setMax(100);
+        volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int level, boolean fromUser) {
+                if (fromUser) {
+                    LibraryUtils.getPlayer().setVolume(level);
+                }
+            }
+        });
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         MessagesUtils.canReceiveMessages(this);
+
+        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        manager.registerMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
+        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        manager.unregisterMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
+
         if (broadcastManager == null) {
             return;
         }
-
         broadcastManager.unregisterReceiver(resyncReceiver);
     }
 
@@ -131,6 +178,10 @@ public class MainActivity extends ActionBarActivity {
 
     /////////////////////////////
     Intent intent;
+
+    public void volume(View view) {
+        new UnpairTask(this, AccountUtils.getPassword()).execute();
+    }
 
     public void logout(View view) {
         new UnpairTask(this, AccountUtils.getPassword()).execute();

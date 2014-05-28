@@ -4,11 +4,14 @@ import android.content.Context;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.gson.annotations.Expose;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import fm.radiant.android.models.Audio;
 
@@ -16,7 +19,8 @@ public abstract class AudioModel extends Model {
     private static String VALUE_VERSION   = "h";
     private static String VALUE_EXTENSION = "mp3";
 
-    private Collection<fm.radiant.android.models.Audio> audio;
+    @Expose
+    private Collection<fm.radiant.android.models.Audio> audio = Collections.emptyList();
 
     public String getDirname() {
         return getClass().getSimpleName().toLowerCase();

@@ -95,6 +95,23 @@ public class Syncer implements DownloadEventListener{
         if (currentDownload != null) currentDownload.abort();
     }
 
+    public void sendBroadcast() {
+        Intent intent = new Intent(Radiant.INTENT_SYNCER_STATE_CHANGED);
+
+        // base...
+
+        intent.putExtra(PROPERTY_STATE, currentState);
+
+        // advanced...
+
+        intent.putExtra(PROPERTY_SYNCED_PERCENT, syncedPercent);
+        intent.putExtra(PROPERTY_ESTIMATED_TIME, downloadSpeed);
+        intent.putExtra(PROPERTY_DOWNLOAD_SPEED, estimatedTime);
+        intent.putExtra(PROPERTY_ERROR_CODE,     errorCode);
+
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
     public int getState() {
         return currentState;
     }
@@ -200,23 +217,6 @@ public class Syncer implements DownloadEventListener{
 
     private void throwOnInterrupt() throws InterruptedIOException {
         if (currentState != STATE_SYNCING) throw new InterruptedIOException();
-    }
-
-    private void sendBroadcast() {
-        Intent intent = new Intent(Radiant.INTENT_SYNCER_STATE_CHANGED);
-
-        // base...
-
-        intent.putExtra(PROPERTY_STATE, currentState);
-
-        // advanced...
-
-        intent.putExtra(PROPERTY_SYNCED_PERCENT, syncedPercent);
-        intent.putExtra(PROPERTY_ESTIMATED_TIME, downloadSpeed);
-        intent.putExtra(PROPERTY_DOWNLOAD_SPEED, estimatedTime);
-        intent.putExtra(PROPERTY_ERROR_CODE,     errorCode);
-
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private Integer calculateSyncedPercent() {
