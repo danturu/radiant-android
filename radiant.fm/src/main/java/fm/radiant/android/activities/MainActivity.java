@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -69,7 +68,7 @@ public class MainActivity extends ActionBarActivity {
         // PLAYEr
 
         LibraryUtils.getPlayer().setPeriods(AccountUtils.getCurrentPlace().getPeriods());
-        LibraryUtils.getPlayer().enqueuePeriod();
+        LibraryUtils.getPlayer().schedule();
     }
 
     @Override
@@ -90,7 +89,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void startLoginActivity() {
-        Intent intent = new Intent(this, LoginActivity.class);
+        Intent intent = new Intent(this, AuthActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         startActivity(intent);

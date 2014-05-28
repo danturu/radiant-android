@@ -11,7 +11,7 @@ import com.github.kevinsawicki.http.HttpRequest;
 import java.io.IOException;
 
 import fm.radiant.android.R;
-import fm.radiant.android.activities.LoginActivity;
+import fm.radiant.android.activities.AuthActivity;
 import fm.radiant.android.utils.AccountUtils;
 import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.MessagesUtils;
@@ -68,7 +68,7 @@ public class UnpairTask extends AsyncTask<Void, Void, Void> {
     }
 
     private void startLoginActivity() {
-        Intent intent = new Intent(activity, LoginActivity.class);
+        Intent intent = new Intent(activity, AuthActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         activity.startActivity(intent);

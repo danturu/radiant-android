@@ -4,6 +4,7 @@ import android.content.Context;
 
 import java.util.List;
 
+import fm.radiant.android.lib.AudioModel;
 import fm.radiant.android.models.Ad;
 
 public class AdsIndexer extends AbstractIndexer {
@@ -29,5 +30,10 @@ public class AdsIndexer extends AbstractIndexer {
     @Override
     public List<Ad> getRemotedQueue() {
         return (List<Ad>) super.getRemotedQueue();
+    }
+
+    @Override
+    protected void onPersistentModel(AudioModel model) {
+        // no implementation necessary...
     }
 }

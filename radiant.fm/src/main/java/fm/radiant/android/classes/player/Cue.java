@@ -1,8 +1,6 @@
 package fm.radiant.android.classes.player;
 
-import java.util.concurrent.Callable;
-
-public abstract class Cue implements Callable {
+public abstract class Cue implements Runnable {
     private int time;
 
     public Cue(int time) {

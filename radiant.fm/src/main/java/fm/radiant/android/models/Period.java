@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import fm.radiant.android.comparators.CurrentPeriodComparator;
-import fm.radiant.android.interfaces.Model;
+import fm.radiant.android.lib.Model;
 
 import static org.joda.time.DateTimeFieldType.dayOfWeek;
 import static org.joda.time.DateTimeFieldType.millisOfDay;

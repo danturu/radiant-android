@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import fm.radiant.android.classes.syncer.Download;
+import fm.radiant.android.lib.AudioModel;
 
 public interface DownloadEventListener {
     public void onSuccess(Download download, AudioModel model, File file);

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="cover_1" type="color">#f6888d</item>
+    <item name="cover_2" type="color">#c9e091</item>
+    <item name="cover_3" type="color">#90ceec</item>
+    <item name="cover_4" type="color">#c993c7</item>
+    <item name="cover_5" type="color">#fbc680</item>
+    <item name="cover_6" type="color">#62d9de</item>
+
+    <integer-array name="covers">
+        <item>@color/cover_1</item>
+        <item>@color/cover_2</item>
+        <item>@color/cover_3</item>
+        <item>@color/cover_4</item>
+        <item>@color/cover_5</item>
+        <item>@color/cover_6</item>
+    </integer-array>
+</resources>

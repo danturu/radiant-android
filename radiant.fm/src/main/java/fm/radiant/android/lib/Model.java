@@ -1,4 +1,4 @@
-package fm.radiant.android.interfaces;
+package fm.radiant.android.lib;
 
 public abstract class Model {
     private int id;

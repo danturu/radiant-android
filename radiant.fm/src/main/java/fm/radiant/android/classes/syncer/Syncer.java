@@ -20,8 +20,8 @@ import java.util.List;
 
 import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.indexer.AbstractIndexer;
-import fm.radiant.android.interfaces.AudioModel;
 import fm.radiant.android.interfaces.DownloadEventListener;
+import fm.radiant.android.lib.AudioModel;
 import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.NetworkUtils;
 import fm.radiant.android.utils.StorageUtils;

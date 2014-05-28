@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import fm.radiant.android.interfaces.Model;
+import fm.radiant.android.lib.Model;
 import fm.radiant.android.utils.ParseUtils;
 
 public class Place extends Model {

@@ -1,6 +1,6 @@
 package fm.radiant.android.models;
 
-import fm.radiant.android.interfaces.Model;
+import fm.radiant.android.lib.Model;
 
 public class Style extends Model {
     private String name;

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import fm.radiant.android.interfaces.Model;
+import fm.radiant.android.lib.Model;
 
 public class Campaign extends Model {
     private int periodicity;
@@ -19,7 +19,7 @@ public class Campaign extends Model {
 
     private List<Ad> ads = new ArrayList<Ad>();
 
-    public static Campaign selectRandom(List<Campaign> campaigns) {
+    public static Campaign sample(List<Campaign> campaigns) {
         List<Campaign> cloned = new ArrayList<Campaign>(campaigns);
         Collections.shuffle(cloned);
 
@@ -37,11 +37,18 @@ public class Campaign extends Model {
         return ads;
     }
 
+    public List<Ad> randomAds() {
+        List<Ad> cloned = new ArrayList<Ad>(ads);
+        Collections.shuffle(cloned);
+
+        return cloned.subList(0, selectivity);
+    }
+
     public int getPeriodicity() {
         return periodicity;
     }
 
-    public int getSelectivity() {
+    public int getAdsCountPerBlock() {
         return selectivity;
     }
 

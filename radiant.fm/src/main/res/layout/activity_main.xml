@@ -9,7 +9,7 @@
     tools:context="fm.radiant.android.activities.MainActivity">
 
     <TextView
-        android:text="@string/hello_world"
+        android:text="scds"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
     <Button
@@ -68,8 +68,8 @@
     <Button
         android:layout_width="fill_parent"
         android:layout_height="45dp"
-        android:text="@string/button_login"
-        android:id="@+id/button_login"
+        android:text="@string/button_signin"
+        android:id="@+id/button_signin"
         android:onClick="logout"
         android:enabled="true"
         android:clickable="true"

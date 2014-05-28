@@ -3,7 +3,7 @@ package fm.radiant.android.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import fm.radiant.android.interfaces.Model;
+import fm.radiant.android.lib.Model;
 
 public class Genre extends Model {
     private String description;

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import fm.radiant.android.interfaces.AudioModel;
+import fm.radiant.android.lib.AudioModel;
 
 public abstract class AbstractIndexer {
     private Context context;
@@ -37,6 +37,7 @@ public abstract class AbstractIndexer {
             try {
                 if (isAudioExists(model)) {
                     addToQueue(persistedQueue, persistedBytes, model);
+                    onPersistentModel(model);
                 } else {
                     addToQueue(remotedQueue, remotedBytes, model);
                 }
@@ -56,6 +57,8 @@ public abstract class AbstractIndexer {
 
         persistedQueue.add(model);
         persistedBytes.add(filesize);
+
+        onPersistentModel(model);
     }
 
     public boolean isIndexed() {
@@ -97,6 +100,8 @@ public abstract class AbstractIndexer {
     public long getTotalBytes() {
         return totalBytes.longValue();
     }
+
+    protected abstract void onPersistentModel(AudioModel model);
 
     protected void addToQueue(List<AudioModel> queue, MutableLong queueBytes, AudioModel model) {
         int filesize = model.getAudio().getSize();

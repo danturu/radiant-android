@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import fm.radiant.android.interfaces.AudioModel;
+import fm.radiant.android.lib.AudioModel;
 
 public class Track extends AudioModel {
     private int styleId;

@@ -13,8 +13,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import fm.radiant.android.interfaces.AudioModel;
 import fm.radiant.android.interfaces.DownloadEventListener;
+import fm.radiant.android.lib.AudioModel;
 import fm.radiant.android.lib.TimeoutInputStream;
 import fm.radiant.android.utils.StorageUtils;
 

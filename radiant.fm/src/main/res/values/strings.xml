@@ -2,15 +2,14 @@
 <resources>
 
     <string name="app_name">radiant.fm</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
 
     <string name="placeholder_password">Пароль</string>
 
     <string name="button_ok">OK</string>
     <string name="button_cancel">Отмена</string>
-    <string name="button_login">Войти</string>
     <string name="button_repair">Перепривязать</string>
+    <string name="button_signin">Войти</string>
+    <string name="button_signup">Зарегистрироваться</string>
 
     <string name="message_please_wait">Подождите</string>
     <string name="message_already_paired">message_pairing_forbidden</string>

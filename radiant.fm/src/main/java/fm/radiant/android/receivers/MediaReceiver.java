@@ -10,8 +10,6 @@ import fm.radiant.android.classes.player.Player;
 import fm.radiant.android.utils.LibraryUtils;
 
 public class MediaReceiver extends BroadcastReceiver {
-    private static final String TAG = "MediaReceiver";
-
     public static PendingIntent getBroadcast(Context context) {
         Intent receiver = new Intent(context, MediaReceiver.class);
         return PendingIntent.getBroadcast(context, 0, receiver, 0);
@@ -21,7 +19,10 @@ public class MediaReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Player player = LibraryUtils.getPlayer();
 
-        player.enqueuePeriod();
-        player.play();
+        player.schedule();
+
+        if (player.getState() != Player.STATE_STOPPED) {
+            player.play();
+        }
     }
 }

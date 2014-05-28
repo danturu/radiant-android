@@ -2,7 +2,7 @@ package fm.radiant.android.classes.player;
 
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.util.Log;
+import android.os.Handler;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,39 +10,34 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
-import fm.radiant.android.interfaces.AudioModel;
 import fm.radiant.android.interfaces.DeckEventListener;
+import fm.radiant.android.lib.AudioModel;
 
 public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener{
     private final Context context;
     private final MediaPlayer player;
-    private final ScheduledExecutorService worker;
 
     private AudioModel currentAudio;
     private DeckEventListener currentEventListener;
     private float currentVolume;
 
-    private final Stack<AudioModel> audioStack;
+    private final Stack<AudioModel> tracks;
     private final List<Cue> cues;
-    private final List<ScheduledFuture> cueTasks;
+
+    private final Handler timer = new Handler();
+    private final Handler fader = new Handler();
 
     public Deck(Context context) {
         this.context = context;
-        this.worker  = Executors.newSingleThreadScheduledExecutor();
 
         this.player = new MediaPlayer();
         this.player.setOnPreparedListener(this);
         this.player.setOnCompletionListener(this);
         this.player.setOnErrorListener(this);
 
-        this.audioStack = new Stack<AudioModel>();
-        this.cues       = new ArrayList<Cue>();
-        this.cueTasks   = new ArrayList<ScheduledFuture>();
+        this.tracks = new Stack<AudioModel>();
+        this.cues   = new ArrayList<Cue>();
     }
 
     @Override
@@ -52,10 +47,10 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
 
     @Override
     public void onCompletion(MediaPlayer player) {
-        if (audioStack.isEmpty()) {
+        if (tracks.isEmpty()) {
             currentEventListener.onComplete(this, player);
         } else {
-            prepareNext(context, audioStack.pop());
+            prepareNext(context, tracks.pop());
         }
     }
 
@@ -77,15 +72,19 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         return currentAudio;
     }
 
-    public void load(final List<? extends AudioModel> models, final DeckEventListener eventListener) {
+    public void load(final List<? extends AudioModel> tracks, final DeckEventListener eventListener) {
         this.currentEventListener = eventListener;
-        resetStack(models);
+        resetStackWith(tracks);
 
-        prepareNext(context, audioStack.pop());
+        if (tracks.isEmpty()) {
+            currentEventListener.onComplete(this, player);
+        } else {
+            prepareNext(context, this.tracks.pop());
+        }
     }
 
-    public void load(AudioModel audio, final DeckEventListener deckEventListener) {
-        load(Arrays.asList(audio), deckEventListener);
+    public void load(AudioModel track, final DeckEventListener deckEventListener) {
+        load(Arrays.asList(track), deckEventListener);
     }
 
     public void start() {
@@ -95,9 +94,37 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
     }
 
     public void pause() {
-        if (currentAudio == null) return;
+        if (currentAudio == null || !player.isPlaying()) return;
 
         dequeueCues(); player.pause();
+    }
+
+    public void fade(final float from, final float to, final int duration, final Runnable callback) {
+        Runnable faderIteration = new Runnable() {
+            float delta = (to - from) / duration * 30;
+
+            @Override
+            public void run() {
+                Deck.this.currentVolume += delta;
+
+                if (player.isPlaying() && ((delta > 0 && currentVolume <= to) || (delta < 0 && currentVolume >= to))) {
+                    fader.postDelayed(this, 30);
+                } else {
+                    fader.post(callback);
+                }
+
+                player.setVolume(currentVolume, currentVolume);
+            }
+        };
+
+        this.currentVolume = from;
+
+        fader.removeCallbacksAndMessages(null);
+        fader.post(faderIteration);
+    }
+
+    public void fade(final float to, int duration, final Runnable callback) {
+        fade(currentVolume, to, duration, callback);
     }
 
     public void setCue(Cue cue) {
@@ -109,19 +136,17 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         int duration = player.getDuration();
 
         for (Cue cue : cues) {
-            cueTasks.add(worker.schedule(cue, cue.getDelay(position, duration), TimeUnit.MILLISECONDS));
+            timer.postDelayed(cue, cue.getDelay(position, duration));
         }
     }
 
     protected void dequeueCues() {
-        for (ScheduledFuture cueTask : cueTasks) { cueTask.cancel(true); }
-
-        cueTasks.clear();
+        timer.removeCallbacksAndMessages(null);
     }
 
     protected void prepareNext(Context context, AudioModel audio) {
         this.currentAudio  = audio;
-        this.currentVolume = 1;
+        this.currentVolume = 1.0f;
 
         player.reset();
         player.setVolume(currentVolume, currentVolume);
@@ -136,7 +161,11 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
         }
     }
 
-    private void resetStack(Collection<? extends AudioModel> models) {
-        audioStack.clear(); audioStack.addAll(models);
+    private void resetStackWith(List<? extends AudioModel> tracks) {
+        this.tracks.clear();
+
+        for (AudioModel track : tracks) {
+            if (track != null) this.tracks.add(track);
+        }
     }
 }
