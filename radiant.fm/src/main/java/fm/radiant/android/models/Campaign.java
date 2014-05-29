@@ -25,7 +25,7 @@ public class Campaign extends Model {
     @Expose
     private List<Ad> ads = new ArrayList<Ad>();
 
-    public static Campaign sample(List<Campaign> campaigns) {
+    public static Campaign getRandom(List<Campaign> campaigns) {
         List<Campaign> cloned = new ArrayList<Campaign>(campaigns);
         Collections.shuffle(cloned);
 
@@ -47,7 +47,7 @@ public class Campaign extends Model {
         List<Ad> cloned = new ArrayList<Ad>(ads);
         Collections.shuffle(cloned);
 
-        return cloned;//.subList(0, selectivity);
+        return cloned.subList(0, selectivity);
     }
 
     public int getPeriodicity() {

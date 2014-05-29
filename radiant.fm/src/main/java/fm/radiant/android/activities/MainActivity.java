@@ -1,14 +1,17 @@
 package fm.radiant.android.activities;
 
+import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.SeekBar;
 
@@ -17,6 +20,7 @@ import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.cleaner.AdsCleaner;
 import fm.radiant.android.classes.cleaner.TracksCleaner;
 import fm.radiant.android.classes.syncer.Syncer;
+import fm.radiant.android.fragments.PlayerFragment;
 import fm.radiant.android.services.DownloadService;
 import fm.radiant.android.tasks.CleanTask;
 import fm.radiant.android.tasks.SubscribeTask;
@@ -52,26 +56,6 @@ public class MainActivity extends ActionBarActivity {
 
         // BOOTSTRAP
 
-        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
-
-        int result = manager.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-                                                   @Override
-                                                   public void onAudioFocusChange(int i) {
-
-                                                   }
-                                               },
-                // Use the music stream.
-                AudioManager.STREAM_MUSIC,
-                // Request permanent focus.
-                AudioManager.AUDIOFOCUS_GAIN);
-
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            manager.registerMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
-            // Start playback.
-        }
-
-       // manager.registerMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
-
         if (MessagesUtils.canReceiveMessages(this)) {
             new SyncTask().execute();
             new SubscribeTask().execute();
@@ -92,42 +76,47 @@ public class MainActivity extends ActionBarActivity {
         LibraryUtils.getPlayer().setCampaigns(AccountUtils.getCurrentPlace().getCampaigns());
         LibraryUtils.getPlayer().schedule();
 
-        SeekBar volumeSlider = (SeekBar) findViewById(R.id.slider_volume);
-        volumeSlider.setMax(100);
-        volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
+        /************************************************/
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(getContentViewCompat(), new PlayerFragment(), "player");
+        transaction.commit();
+    }
 
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int level, boolean fromUser) {
-                if (fromUser) {
-                    LibraryUtils.getPlayer().setVolume(level);
-                }
-            }
-        });
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("player");
 
+        if (fragment != null && fragment.isVisible()) switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                LibraryUtils.getPlayer().adjustVolume(AudioManager.ADJUST_RAISE);
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                LibraryUtils.getPlayer().adjustVolume(AudioManager.ADJUST_LOWER);
+                return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("player");
+
+        if ((fragment != null && fragment.isVisible()) && (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN  ))
+            return true;
+
+        return super.onKeyUp(keyCode, event);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         MessagesUtils.canReceiveMessages(this);
-
-        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        manager.registerMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        AudioManager manager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        manager.unregisterMediaButtonEventReceiver(new ComponentName(getPackageName(), RemoteControlReceiver.class.getName()));
 
         if (broadcastManager == null) {
             return;
@@ -162,13 +151,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-
-
-
-
-
-
-
+    public static int getContentViewCompat() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH ?
+                android.R.id.content : R.id.action_bar_activity_content;
+    }
 
 
 
@@ -201,6 +187,7 @@ public class MainActivity extends ActionBarActivity {
 
     public void play(View view) {
         LibraryUtils.getPlayer().setTracksIndexer(LibraryUtils.getTracksIndexer());
+        LibraryUtils.getPlayer().setAdsIndexer(LibraryUtils.getAdsIndexer());
         LibraryUtils.getPlayer().play();
     }
 

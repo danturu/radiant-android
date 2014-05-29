@@ -23,6 +23,6 @@ public class Genre extends Model {
     }
 
     public int getColorIndex() {
-        return getId() % 5 + 1;
+        return getId() % 5;
     }
 }

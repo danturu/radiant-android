@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="cover_1" type="color">#f6888d</item>
-    <item name="cover_2" type="color">#c9e091</item>
-    <item name="cover_3" type="color">#90ceec</item>
-    <item name="cover_4" type="color">#c993c7</item>
-    <item name="cover_5" type="color">#fbc680</item>
-    <item name="cover_6" type="color">#62d9de</item>
+    <color name="white">#FFFFFF</color>
+
+    <item name="cover_1" type="color">#F6888D</item>
+    <item name="cover_2" type="color">#C9E091</item>
+    <item name="cover_3" type="color">#90CEEC</item>
+    <item name="cover_4" type="color">#C993C7</item>
+    <item name="cover_5" type="color">#FBC680</item>
+    <item name="cover_6" type="color">#62D9DE</item>
 
     <integer-array name="covers">
         <item>@color/cover_1</item>

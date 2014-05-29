@@ -165,8 +165,7 @@ public class Syncer implements DownloadEventListener{
         int offset = 0;
 
         for(AbstractIndexer indexer: indexers) {
-            indexer.index();
-            LibraryUtils.inspect(indexer);
+            indexer.index(); LibraryUtils.inspect(indexer);
 
             for (AudioModel model : indexer.getRemotedQueue()) {
                 Download download = new Download(context, model, this);

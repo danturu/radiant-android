@@ -1,8 +1,19 @@
 <resources>
+    <style name="CustomTheme" parent="Theme.AppCompat.Light">
+        <item name="android:windowContentOverlay">@drawable/actionbar_shadow</item>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light">
-        <!-- Customize your theme here. -->
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="actionBarStyle">@style/ActionBar</item>
     </style>
 
+    <style name="ActionBar" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/white</item>
+        <item name="background">@color/white</item>
+    </style>
+
+    <style name="VolumeSlider" parent="android:Widget.SeekBar">
+        <item name="android:progressDrawable">@drawable/slider_volume_progress</item>
+        <item name="android:thumb">@drawable/slider_volume_thumb</item>
+        <item name="android:thumbOffset">16dip</item>
+    </style>
 </resources>

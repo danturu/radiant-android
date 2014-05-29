@@ -11,8 +11,8 @@ import fm.radiant.android.utils.LibraryUtils;
 
 public class MediaReceiver extends BroadcastReceiver {
     public static PendingIntent getBroadcast(Context context) {
-        Intent receiver = new Intent(context, MediaReceiver.class);
-        return PendingIntent.getBroadcast(context, 0, receiver, 0);
+        Intent receiverIntent = new Intent(context, MediaReceiver.class);
+        return PendingIntent.getBroadcast(context, 0, receiverIntent, 0);
     }
 
     @Override

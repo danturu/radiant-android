@@ -18,7 +18,7 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:src="@drawable/logo_white" />
+        android:src="@drawable/auth_logo" />
 
     <LinearLayout
         android:layout_width="fill_parent"

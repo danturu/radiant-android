@@ -1,8 +1,5 @@
 package fm.radiant.android.models;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.gson.annotations.Expose;
 
 import org.joda.time.DateTime;
@@ -82,16 +79,5 @@ public class Period extends Model {
 
     public boolean isNow() {
         return getInterval().containsNow();
-    }
-
-    public List<Integer> collectStyleIds() {
-        Iterable<Integer> styleIds = Iterables.transform(genre.getStyles(), new Function<Style, Integer>() {
-            @Override
-            public Integer apply(Style style) {
-                return style.getId();
-            }
-        });
-
-        return Lists.newArrayList(styleIds);
     }
 }

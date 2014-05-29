@@ -15,8 +15,7 @@ import fm.radiant.android.interfaces.DeckEventListener;
 import fm.radiant.android.lib.AudioModel;
 
 public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener{
-    private final Context context;
-    private final MediaPlayer player;
+    private final Context context; private final MediaPlayer player;
 
     private DeckEventListener currentEventListener;
     private AudioModel currentTrack;

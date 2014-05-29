@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/window_content_overlay">
+
+    <LinearLayout
+        android:padding="15dp"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentEnd="false"
+        android:layout_above="@+id/status"
+        android:id="@+id/period"
+        android:background="#DDDDDD">
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical">
+
+            <fm.radiant.android.lib.widgets.SquareButton
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="3"
+                android:id="@+id/button_schedule"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/button_circle_white"
+                android:src="@drawable/player_button_schedule" />
+
+            <fm.radiant.android.lib.widgets.SquareButton
+                android:layout_weight="4"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:id="@+id/button_play"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:background="@drawable/button_circle_white"
+                android:src="@drawable/player_button_play" />
+
+            <fm.radiant.android.lib.widgets.SquareButton
+                android:layout_width="0dp"
+                android:layout_weight="3"
+                android:layout_height="0dp"
+                android:id="@+id/button_announce"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/button_circle_white"
+                android:src="@drawable/player_button_announce" />
+
+        </LinearLayout>
+
+        <SeekBar
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/slider_volume"
+            android:progressDrawable="@drawable/slider_volume_progress"
+            android:thumb="@drawable/slider_volume_thumb"
+            android:thumbOffset="8dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentStart="false">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Button"
+            android:id="@+id/button5" />
+    </LinearLayout>
+
+</RelativeLayout>
