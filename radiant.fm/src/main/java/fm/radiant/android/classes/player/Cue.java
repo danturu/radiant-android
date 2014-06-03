@@ -1,13 +1,13 @@
 package fm.radiant.android.classes.player;
 
 public abstract class Cue implements Runnable {
-    private int time;
+    private int mTime;
 
     public Cue(int time) {
-        this.time = time;
+        mTime = time;
     }
 
     public int getDelay(int position, int duration) {
-        return time - position + (time < 0 ? duration : 0);
+        return mTime - position + (mTime < 0 ? duration : 0);
     }
 }

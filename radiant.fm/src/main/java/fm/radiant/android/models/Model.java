@@ -1,4 +1,4 @@
-package fm.radiant.android.lib;
+package fm.radiant.android.models;
 
 import com.google.gson.annotations.Expose;
 

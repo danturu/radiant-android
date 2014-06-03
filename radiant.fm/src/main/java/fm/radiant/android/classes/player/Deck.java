@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Stack;
 
 import fm.radiant.android.interfaces.DeckEventListener;
-import fm.radiant.android.lib.AudioModel;
+import fm.radiant.android.models.AudioModel;
 
 public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener{
     private final Context context; private final MediaPlayer player;

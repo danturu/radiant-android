@@ -4,17 +4,15 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 public class CommonUtils {
-    private static final String TAG = "CommonUtils";
-
-    private static Context context;
+    private static Context sContext;
 
     public static void initialize(Context context) {
-        CommonUtils.context = context;
+        sContext = context;
     }
 
     public static int getAppVersion() {
         try {
-            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+            return sContext.getPackageManager().getPackageInfo(sContext.getPackageName(), 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
             // should never happen...
 

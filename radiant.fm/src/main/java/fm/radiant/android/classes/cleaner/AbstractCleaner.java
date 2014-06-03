@@ -13,7 +13,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-import fm.radiant.android.lib.AudioModel;
+import fm.radiant.android.models.AudioModel;
 
 public abstract class AbstractCleaner {
     private List<? extends AudioModel> queue;

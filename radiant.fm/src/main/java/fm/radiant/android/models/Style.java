@@ -7,8 +7,6 @@ import com.google.gson.annotations.Expose;
 
 import java.util.List;
 
-import fm.radiant.android.lib.Model;
-
 public class Style extends Model {
     @Expose
     private String name;

@@ -1,7 +1,6 @@
 package fm.radiant.android.lib.widgets;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
 

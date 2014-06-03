@@ -4,8 +4,8 @@ import android.content.Context;
 
 import java.util.List;
 
-import fm.radiant.android.lib.AudioModel;
 import fm.radiant.android.models.Ad;
+import fm.radiant.android.models.AudioModel;
 
 public class AdsIndexer extends AbstractIndexer {
     public AdsIndexer(Context context, List<Ad> queue) {

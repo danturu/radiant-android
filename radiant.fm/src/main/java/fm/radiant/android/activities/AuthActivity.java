@@ -1,6 +1,8 @@
 package fm.radiant.android.activities;
 
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.KeyEvent;
@@ -70,6 +72,7 @@ public class AuthActivity extends ActionBarActivity implements TextView.OnEditor
 
         findViewById(R.id.layout_cover).setBackgroundColor(color);
         findViewById(R.id.underlay_password).setBackgroundColor(color);
+        findViewById(R.id.underlay_signin).setBackgroundColor(color);
     }
 
     private void signin() {
@@ -77,7 +80,7 @@ public class AuthActivity extends ActionBarActivity implements TextView.OnEditor
     }
 
     private void signup() {
-        // Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://help.radiant.fm"));
-        // startActivity(browserIntent);
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://help.radiant.fm"));
+        startActivity(browserIntent);
     }
 }

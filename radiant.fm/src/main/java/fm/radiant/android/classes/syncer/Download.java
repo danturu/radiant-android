@@ -14,23 +14,22 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import fm.radiant.android.interfaces.DownloadEventListener;
-import fm.radiant.android.lib.AudioModel;
 import fm.radiant.android.lib.TimeoutInputStream;
+import fm.radiant.android.models.AudioModel;
 import fm.radiant.android.utils.StorageUtils;
 
 public class Download {
-    private static final String TAG = "Download";
+    private final Context mContext;
 
-    private Context context;
-    private AudioModel model;
-    private DownloadEventListener downloadEventListener;
+    private final AudioModel            mModel;
+    private final DownloadEventListener mEvent;
 
-    private boolean aborted = false;
+    private boolean mAborted = false;
 
-    public Download(Context context, AudioModel model, DownloadEventListener downloadEventListener) {
-        this.context               = context;
-        this.model                 = model;
-        this.downloadEventListener = downloadEventListener;
+    public Download(Context context, AudioModel model, DownloadEventListener event) {
+        mContext = context;
+        mModel   = model;
+        mEvent   = event;
     }
 
     public void start() {
@@ -39,9 +38,9 @@ public class Download {
         try {
             throwOnInterrupt();
 
-            tempFile = File.createTempFile(model.getStringId(), ".mp3", context.getExternalCacheDir());
+            tempFile = File.createTempFile(mModel.getStringId(), ".mp3", mContext.getExternalCacheDir());
 
-            url = new URL(model.getAudio().getURL());
+            url = new URL(mModel.getAudio().getURL());
             connection = url.openConnection();
 
             connection.setConnectTimeout(8000);
@@ -54,43 +53,42 @@ public class Download {
             byte data[] = new byte[1024]; int bytesRead = 0; int bytesWritten = 0;
 
             while ((bytesRead = inputStream.read(data)) != -1) {
-                throwOnInterrupt();
-                outputStream.write(data, 0, bytesRead);
+                throwOnInterrupt(); outputStream.write(data, 0, bytesRead);
 
-                downloadEventListener.onProgress(this, model, bytesWritten += bytesRead, connection.getContentLength());
+                mEvent.onProgress(this, mModel, bytesWritten += bytesRead, connection.getContentLength());
             }
 
             outputStream.flush();
 
-            downloadEventListener.onSuccess(this, model, storeFile(tempFile));
+            mEvent.onSuccess(this, mModel, storeFile(tempFile));
         } catch (IOException exception) {
-            downloadEventListener.onFailure(this, model, exception);
+            mEvent.onFailure(this, mModel, exception);
         } finally {
             FileUtils.deleteQuietly(tempFile);
 
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(outputStream);
 
-            downloadEventListener.onComplete(this,model);
+            mEvent.onComplete(this, mModel);
         }
     }
 
     public void abort() {
-        this.aborted = true;
+        mAborted = true;
     }
 
     private File storeFile(File tempFile) throws IOException {
-        if (!model.getAudio().getHash().equals(StorageUtils.md5(tempFile))) {
+        if (!mModel.getAudio().getHash().equals(StorageUtils.md5(tempFile))) {
             throw new IOException("Invalid checksum, download could be corrupted.");
         }
 
-        File destinationFile = model.getFile(context);
+        File destinationFile = mModel.getFile(mContext);
         FileUtils.copyFile(tempFile, destinationFile);
 
         return destinationFile;
     }
 
     private void throwOnInterrupt() throws InterruptedIOException {
-        if (aborted) throw new InterruptedIOException();
+        if (mAborted) throw new InterruptedIOException();
     }
 }

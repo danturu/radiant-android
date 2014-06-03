@@ -1,9 +1,8 @@
 <resources>
     <style name="CustomTheme" parent="Theme.AppCompat.Light">
         <item name="android:windowContentOverlay">@drawable/actionbar_shadow</item>
-
-        <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="actionBarStyle">@style/ActionBar</item>
+        <item name="homeAsUpIndicator">@drawable/up_indicator</item>
     </style>
 
     <style name="ActionBar" parent="@style/Widget.AppCompat.ActionBar">

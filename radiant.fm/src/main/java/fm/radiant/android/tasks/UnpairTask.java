@@ -17,7 +17,7 @@ import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.MessagesUtils;
 
 public class UnpairTask extends AsyncTask<Void, Void, Void> {
-    private static final String TAG = "PairTask";
+    private static final String TAG = PairTask.class.getSimpleName();
 
     private Activity activity;
 

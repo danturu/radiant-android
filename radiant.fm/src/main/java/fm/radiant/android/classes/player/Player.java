@@ -10,12 +10,14 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.indexer.AdsIndexer;
 import fm.radiant.android.classes.indexer.TracksIndexer;
 import fm.radiant.android.interfaces.DeckEventListener;
-import fm.radiant.android.lib.AudioModel;
+import fm.radiant.android.models.AudioModel;
 import fm.radiant.android.models.Campaign;
 import fm.radiant.android.models.Period;
 import fm.radiant.android.models.Style;
@@ -28,64 +30,65 @@ public class Player {
     private static final float VALUE_STREAM_TRACKS_RATIO = 0.6f;
     private static final float VALUE_ONLINE_TRACKS_RATIO = 0.3f;
 
-    public static final int STATE_PLAYING = 1;
-    public static final int STATE_STOPPED = 2;
-    public static final int STATE_WAITING = 3;
-    public static final int STATE_FAILED  = 4;
+    public static final int STATE_INDEXING = 1;
+    public static final int STATE_PLAYING  = 2;
+    public static final int STATE_STOPPED  = 3;
+    public static final int STATE_WAITING  = 4;
+    public static final int STATE_FAILED   = 5;
 
-    private int currentState = STATE_STOPPED;
+    private int mCurrentState = STATE_STOPPED;
 
     private static final String PROPERTY_STATE  = "state";
     private static final String PROPERTY_VOLUME = "volume";
 
-    private final Context context;
+    private final Context mContext;
 
-    private final AudioManager audioManager;
-    private final AlarmManager alarmManager;
+    private final AudioManager mAudioManager;
+    private final AlarmManager mAlarmManager;
 
-    private final DeckEventListener deckEventListener;
-    private float deckVolumeLimit = 1.0f;
+    private final DeckEventListener mDeckEventListener;
+    private float mDeckVolumeLimit = 1.0f;
 
-    private final Deck deckA;
-    private final Deck deckB;
-    private final Deck deckC;
-    private Deck currentDeck;
+    private final Deck mDeckA;
+    private final Deck mDeckB;
+    private final Deck mDeckC;
+    private Deck mCurrentDeck;
 
-    private List<Period> periods;
-    private Period currentPeriod;
+    private List<Period> mPeriods;
+    private Period mCurrentPeriod;
 
-    private List<Campaign> campaigns;
-    private Campaign currentCampaign;
+    private List<Campaign> mCampaigns;
+    private Campaign mCurrentCampaign;
 
-    private TracksIndexer tracksIndexer;
-    private AdsIndexer adsIndexer;
+    private TracksIndexer mTracksIndexer;
+    private AdsIndexer    mAdsIndexer;
 
-    private final Handler timer = new Handler();
+    private final Handler mTimer = new Handler();
+    private final Lock    mLock  = new ReentrantLock();
 
     public Player(Context context) {
-        this.context = context;
+        mContext      = context;
+        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-        this.audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        this.alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        this.mDeckA = new Deck(context);
+        this.mDeckB = new Deck(context);
+        this.mDeckC = new Deck(context);
 
-        this.deckA = new Deck(context);
-        this.deckB = new Deck(context);
-        this.deckC = new Deck(context);
+        this.mCurrentDeck = mDeckA;
 
-        this.currentDeck = deckA;
-
-        this.deckEventListener = new DeckEventListener() {
+        this.mDeckEventListener = new DeckEventListener() {
             @Override
             public void onReady(Deck nextDeck, MediaPlayer player, AudioModel audio) {
                 nextDeck.start();
 
-                if (nextDeck != currentDeck && currentDeck.getPlayer().isPlaying()) {
-                    mix(currentDeck, nextDeck);
+                if (nextDeck != mCurrentDeck && mCurrentDeck.getPlayer().isPlaying()) {
+                    mix(mCurrentDeck, nextDeck);
                 } else {
-                    nextDeck.setVolume(deckVolumeLimit);
+                    nextDeck.setVolume(mDeckVolumeLimit);
                 }
 
-                Player.this.currentDeck = nextDeck;
+                Player.this.mCurrentDeck = nextDeck;
             }
 
             @Override
@@ -95,7 +98,7 @@ public class Player {
 
             @Override
             public void onFailure(Deck deck, MediaPlayer player, AudioModel audio, IOException exception) {
-                deck.load(getRandomTrack(currentPeriod), this);
+                deck.load(getRandomTrack(mCurrentPeriod), this);
             }
 
             @Override
@@ -104,70 +107,92 @@ public class Player {
             }
         };
 
-        deckA.setCue(new Cue(-15000) {
+        mDeckA.setCue(new Cue(-15000) {
             @Override
             public void run() {
-                deckB.load(getRandomTrack(currentPeriod), deckEventListener);
+                mDeckB.load(getRandomTrack(mCurrentPeriod), mDeckEventListener);
             }
         });
 
-        deckB.setCue(new Cue(-15000) {
+        mDeckB.setCue(new Cue(-15000) {
             @Override
             public void run() {
-                deckA.load(getRandomTrack(currentPeriod), deckEventListener);
+                mDeckA.load(getRandomTrack(mCurrentPeriod), mDeckEventListener);
             }
         });
     }
 
     public void setTracksIndexer(TracksIndexer indexer) {
-        this.tracksIndexer = indexer;
+        this.mTracksIndexer = indexer;
     }
 
     public void setAdsIndexer(AdsIndexer indexer) {
-        this.adsIndexer = indexer;
+        this.mAdsIndexer = indexer;
     }
 
     public void setPeriods(List<Period> periods) {
-        this.periods = periods;
+        this.mPeriods = periods;
     }
 
     public void setCampaigns(List<Campaign> campaigns) {
-        this.campaigns = campaigns;
+        this.mCampaigns = campaigns;
     }
 
     public void play() {
-        if (!currentPeriod.isNow()) {
+        mLock.lock();
+
+        if (!mCurrentPeriod.isNow()) {
             stop(STATE_WAITING);
+            mLock.unlock();
         } else
 
-        if (!NetworkUtils.isNetworkConnected() && getPersistedTracksRatio(currentPeriod) < VALUE_ONLINE_TRACKS_RATIO) {
+        if (!NetworkUtils.isNetworkConnected() && getPersistedTracksRatio(mCurrentPeriod) < VALUE_ONLINE_TRACKS_RATIO) {
             stop(STATE_FAILED);
+            mLock.unlock();
         } else
 
-        if (!currentDeck.getPlayer().isPlaying()) {
-            stop(STATE_PLAYING);
+        if (!mCurrentDeck.getPlayer().isPlaying()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        stop(STATE_INDEXING);
 
-            if (currentDeck.getAudio() == null || Style.collectIds(currentPeriod.getGenre().getStyles()).contains(((Track) currentDeck.getAudio()).getStyleId())) {
-                currentDeck.load(getRandomTrack(currentPeriod), deckEventListener);
-            } else {
-                currentDeck.setVolume(deckVolumeLimit);
-                currentDeck.start();
-            }
+                        mTracksIndexer.index();
+                        mAdsIndexer.index();
 
-            advertise();
+                        if (mCurrentState != STATE_INDEXING) {
+                            return;
+                        }
+
+                        stop(STATE_PLAYING);
+
+                        if (mCurrentDeck.getAudio() == null || Style.collectIds(mCurrentPeriod.getGenre().getStyles()).contains(((Track) mCurrentDeck.getAudio()).getStyleId())) {
+                            mCurrentDeck.load(getRandomTrack(mCurrentPeriod), mDeckEventListener);
+                        } else {
+                            mCurrentDeck.setVolume(mDeckVolumeLimit);
+                            mCurrentDeck.start();
+                        }
+
+                        advertise();
+                    } finally {
+                        mLock.unlock();
+                    }
+                }
+            }).start();
         }
     }
 
     public void stop(int state) {
         setState(state);
 
-        timer.removeCallbacksAndMessages(null);
+        mTimer.removeCallbacksAndMessages(null);
 
-        deckA.pause();
-        deckB.pause();
-        deckC.pause();
+        mDeckA.pause();
+        mDeckB.pause();
+        mDeckC.pause();
 
-        this.deckVolumeLimit = 1.0f;
+        this.mDeckVolumeLimit = 1.0f;
     }
 
     public void stop() {
@@ -175,10 +200,10 @@ public class Player {
     }
 
     public void schedule() {
-        this.currentPeriod = Period.findCurrent(periods);
+        this.mCurrentPeriod = Period.findCurrent(mPeriods);
 
-        if (currentPeriod != null) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, currentPeriod.getDelay(), MediaReceiver.getBroadcast(context));
+        if (mCurrentPeriod != null) {
+            mAlarmManager.set(AlarmManager.RTC_WAKEUP, mCurrentPeriod.getDelay(), MediaReceiver.getBroadcast(mContext));
         } else {
             sendBroadcast();
         }
@@ -189,32 +214,32 @@ public class Player {
         intent.putExtra(PROPERTY_STATE,  getState());
         intent.putExtra(PROPERTY_VOLUME, getVolume());
 
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
     public int getState() {
-        return currentState;
+        return mCurrentState;
     }
 
     public int getVolume() {
-        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        return mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
     }
 
     public int getMaxVolume() {
-        return audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        return mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
     }
 
     public Period getPeriod() {
-        return currentPeriod;
+        return mCurrentPeriod;
     }
 
     public void setVolume(int value) {
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, value, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, value, 0);
         sendBroadcast();
     }
 
     public void adjustVolume(int direction) {
-        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, 0);
+        mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, 0);
         sendBroadcast();
     }
 
@@ -222,32 +247,32 @@ public class Player {
         Runnable advertiseIteration = new Runnable() {
             @Override
             public void run() {
-                final Campaign campaign = Campaign.getRandom(campaigns);
+                final Campaign campaign = Campaign.getRandom(mCampaigns);
 
-                if (adsIndexer.getRemotedCount() != 0 || campaign == null || campaign.getAds().isEmpty()) {
+                if (mAdsIndexer.getRemotedCount() != 0 || campaign == null || campaign.getAds().isEmpty()) {
                     return;
                 }
 
-                deckC.load(campaign.randomAds(), new DeckEventListener() {
+                mDeckC.load(campaign.randomAds(), new DeckEventListener() {
                     boolean fade = true;
 
                     @Override
                     public void onReady(Deck deck, MediaPlayer player, AudioModel audio) {
                         if (fade == false) {
-                            deckC.start();
+                            mDeckC.start();
                             return;
                         }
 
                         fade = false;
 
-                        Player.this.deckVolumeLimit = campaign.isDucked() ? 0.5f : 0.0f;
+                        Player.this.mDeckVolumeLimit = campaign.isDucked() ? 0.5f : 0.0f;
 
-                        currentDeck.fade(deckVolumeLimit, VALUE_FADE_DURATION, null);
+                        mCurrentDeck.fade(mDeckVolumeLimit, VALUE_FADE_DURATION, null);
 
-                        timer.postDelayed(new Runnable() {
+                        mTimer.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                deckC.start();
+                                mDeckC.start();
                             }
                         }, VALUE_FADE_DURATION);
                     }
@@ -264,25 +289,25 @@ public class Player {
 
                     @Override
                     public void onComplete(Deck deck, MediaPlayer player) {
-                        Player.this.deckVolumeLimit = 1.0f;
-                        currentDeck.fade(deckVolumeLimit, VALUE_FADE_DURATION, null);
+                        Player.this.mDeckVolumeLimit = 1.0f;
+                        mCurrentDeck.fade(mDeckVolumeLimit, VALUE_FADE_DURATION, null);
                         advertise();
                     }
                 });
             }
         };
 
-        timer.removeCallbacksAndMessages(null);
-        timer.postDelayed(advertiseIteration, 600000);
+        mTimer.removeCallbacksAndMessages(null);
+        mTimer.postDelayed(advertiseIteration, 600000);
     }
 
     private void mix(Deck deckA, Deck deckB) {
-        deckA.fade(deckVolumeLimit, 0.0f, VALUE_FADE_DURATION, null);
-        deckB.fade(0.0f, deckVolumeLimit, VALUE_FADE_DURATION, null);
+        deckA.fade(mDeckVolumeLimit, 0.0f, VALUE_FADE_DURATION, null);
+        deckB.fade(0.0f, mDeckVolumeLimit, VALUE_FADE_DURATION, null);
     }
 
     private void setState(int state) {
-        this.currentState = state;
+        this.mCurrentState = state;
         sendBroadcast();
     }
 
@@ -290,7 +315,7 @@ public class Player {
         float persistedMinutes = 0;
 
         for (Integer styleId : Style.collectIds(period.getGenre().getStyles())) {
-            persistedMinutes += tracksIndexer.getPersistedMinutes(styleId);
+            persistedMinutes += mTracksIndexer.getPersistedMinutes(styleId);
         }
 
         return persistedMinutes / period.getDuration();
@@ -300,9 +325,9 @@ public class Player {
         List<Track> queue;
 
         if (getPersistedTracksRatio(period) > 0.7) {
-            queue = tracksIndexer.getPersistedQueue();
+            queue = mTracksIndexer.getPersistedQueue();
         } else {
-            queue = tracksIndexer.getQueue();
+            queue = mTracksIndexer.getQueue();
         }
 
         return Track.getRandom(queue, period.getGenre().getStyles());

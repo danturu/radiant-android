@@ -1,4 +1,4 @@
-package fm.radiant.android.lib;
+package fm.radiant.android.models;
 
 import android.content.Context;
 
@@ -11,8 +11,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-
-import fm.radiant.android.models.Audio;
 
 public abstract class AudioModel extends Model {
     private static String VALUE_VERSION   = "h";

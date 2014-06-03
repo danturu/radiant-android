@@ -10,7 +10,7 @@ import fm.radiant.android.utils.MessagesUtils;
 
 
 public class SubscribeTask extends AsyncTask<Void, Void, Void> {
-    private static final String TAG = "SubscribeTask";
+    private static final String TAG = SubscribeTask.class.getSimpleName();
 
     private static Handler backoff = new Handler();
 

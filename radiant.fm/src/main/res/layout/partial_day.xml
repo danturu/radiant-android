@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#f1f1f3">
+
+    <TextView
+        android:layout_marginLeft="15dp"
+        android:id="@+id/text_day_name"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:text="Example"
+        android:textSize="15dp"
+        android:gravity="center_vertical"
+        android:textColor="#787878"
+        android:textAllCaps="true"  />
+
+</LinearLayout>

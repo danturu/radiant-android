@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import fm.radiant.android.lib.Model;
-
 public class Campaign extends Model {
     @Expose
     private int periodicity;

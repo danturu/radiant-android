@@ -5,11 +5,11 @@ import android.util.SparseIntArray;
 
 import java.util.List;
 
-import fm.radiant.android.lib.AudioModel;
+import fm.radiant.android.models.AudioModel;
 import fm.radiant.android.models.Track;
 
 public class TracksIndexer extends AbstractIndexer {
-    SparseIntArray persistedMinutes = new SparseIntArray();
+    SparseIntArray mPersistedMinutes = new SparseIntArray();
 
     public TracksIndexer(Context context, List<Track> queue) {
         super(context, queue);
@@ -44,10 +44,10 @@ public class TracksIndexer extends AbstractIndexer {
     protected void onPersistentModel(AudioModel model) {
         Track track = (Track) model;
 
-        persistedMinutes.put(track.getStyleId(), persistedMinutes.get(track.getStyleId()) + track.getAudio().getTime() / 60000);
+        mPersistedMinutes.put(track.getStyleId(), mPersistedMinutes.get(track.getStyleId()) + track.getAudio().getTime() / 60000);
     }
 
     public Integer getPersistedMinutes(Integer styleId) {
-        return persistedMinutes.get(styleId);
+        return mPersistedMinutes.get(styleId);
     }
 }

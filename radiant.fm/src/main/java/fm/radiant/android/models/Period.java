@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.List;
 
 import fm.radiant.android.comparators.CurrentPeriodComparator;
-import fm.radiant.android.lib.Model;
 
 import static org.joda.time.DateTimeFieldType.dayOfWeek;
 import static org.joda.time.DateTimeFieldType.millisOfDay;
@@ -36,19 +35,19 @@ public class Period extends Model {
         return periods.get(0);
     }
 
-    public int getDay() {
+    public Integer getDay() {
         return day;
     }
 
-    public int getDuration() {
+    public Integer getDuration() {
         return duration;
     }
 
-    public int getStartAt() {
+    public Integer getStartAt() {
         return startAt;
     }
 
-    public int getEndAt() {
+    public Integer getEndAt() {
         return endAt;
     }
 

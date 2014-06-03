@@ -5,7 +5,7 @@ import android.media.MediaPlayer;
 import java.io.IOException;
 
 import fm.radiant.android.classes.player.Deck;
-import fm.radiant.android.lib.AudioModel;
+import fm.radiant.android.models.AudioModel;
 
 public interface DeckEventListener {
     public void onReady(Deck deck, MediaPlayer player, AudioModel audio);

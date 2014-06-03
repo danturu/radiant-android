@@ -17,7 +17,7 @@ import fm.radiant.android.activities.MainActivity;
 import fm.radiant.android.utils.AccountUtils;
 
 public class PairTask extends AsyncTask<Void, Void, Integer> implements DialogInterface.OnClickListener {
-    private static final String TAG = "PairTask";
+    private static final String TAG = PairTask.class.getSimpleName();
 
     public static final int RESULT_SUCCESS        = 200;
     public static final int RESULT_ALREADY_PAIRED = 403;

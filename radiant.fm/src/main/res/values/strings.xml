@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">radiant.fm</string>
-
-    <string name="placeholder_password">Пароль</string>
 
     <string name="button_ok">OK</string>
     <string name="button_cancel">Отмена</string>
     <string name="button_repair">Перепривязать</string>
     <string name="button_signin">Войти</string>
     <string name="button_signup">Зарегистрироваться</string>
+
+    <string name="placeholder_password">Пароль</string>
 
     <string name="message_please_wait">Подождите</string>
     <string name="message_already_paired">message_pairing_forbidden</string>

@@ -12,12 +12,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class TimeoutInputStream extends BufferedInputStream {
-    private ExecutorService readLimiter = Executors.newSingleThreadExecutor();
-    private int timeout;
+    private ExecutorService mReadLimiter = Executors.newSingleThreadExecutor();
+    private int mTimeout;
 
     public TimeoutInputStream(final InputStream inputStream, final int timeout) {
         super(inputStream);
-        this.timeout = timeout;
+        mTimeout = timeout;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class TimeoutInputStream extends BufferedInputStream {
         };
 
         try {
-            return readLimiter.submit(readTask).get(timeout, TimeUnit.MILLISECONDS);
+            return mReadLimiter.submit(readTask).get(mTimeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throwOnTimeout();
         } catch (ExecutionException e) {
@@ -44,7 +44,7 @@ public class TimeoutInputStream extends BufferedInputStream {
 
     @Override
     public void close() throws IOException {
-        readLimiter.shutdownNow();
+        mReadLimiter.shutdownNow();
         super.close();
     }
 

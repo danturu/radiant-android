@@ -65,12 +65,16 @@ public class AccountUtils {
         if (request.ok()) {
             String data = request.body(); Place place = Place.parse(data);
 
-            if (getCurrentPlace() == null || !getCurrentPlace().equals(place)) {
+            if (getPlace() == null || !getPlace().equals(place)) {
                 currentPlace = place;
                 Place.store(preferences, data);
 
-                Intent intent = new Intent(Radiant.INTENT_RESYNC);
+                Intent intent = new Intent(Radiant.INTENT_PLACE_CHANGED);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+                Log.i(TAG, "Place was synced");
+            } else {
+                Log.i(TAG, "Place was newest");
             }
         }
 
@@ -101,7 +105,7 @@ public class AccountUtils {
         return preferences.contains(PROPERTY_UUID) && preferences.contains(PROPERTY_PASSWORD);
     }
 
-    public static synchronized Place getCurrentPlace() {
+    public static synchronized Place getPlace() {
         if (currentPlace == null) {
             try {
                 currentPlace = Place.retrieve(preferences);

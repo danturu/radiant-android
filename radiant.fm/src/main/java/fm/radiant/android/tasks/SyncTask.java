@@ -11,7 +11,7 @@ import java.io.IOException;
 import fm.radiant.android.utils.AccountUtils;
 
 public class SyncTask extends AsyncTask<Void, Void, Integer> {
-    private static final String TAG = "SyncTask";
+    private static final String TAG = SyncTask.class.getSimpleName();
 
     private static final int RESULT_SUCCESS = 200;
     private static final int RESULT_FAIL    = 0;
@@ -39,7 +39,7 @@ public class SyncTask extends AsyncTask<Void, Void, Integer> {
     @Override
     protected void onPostExecute(Integer resultCode) {
         if (resultCode == RESULT_SUCCESS) {
-            Log.i(TAG, "Place successfully synced."); return;
+            return;
         }
 
         Runnable resync = new Runnable(){

@@ -1,7 +1,6 @@
 package fm.radiant.android.models;
 
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -12,7 +11,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import fm.radiant.android.lib.Model;
 import fm.radiant.android.utils.ParseUtils;
 
 public class Place extends Model {
@@ -47,10 +45,7 @@ public class Place extends Model {
 
     @Override
     protected String version() {
-        //return cachedAt;
-        Log.d("scdsc", "s" + cachedAt);
-
-        return super.version();
+        return cachedAt;
     }
 
     public String getName() {

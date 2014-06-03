@@ -4,7 +4,6 @@ package fm.radiant.android.services;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
@@ -29,8 +28,6 @@ public class MessagesService extends IntentService {
         try {
             Bundle extras      = intent.getExtras();
             String messageType = MessagesUtils.getMessageType(intent);
-
-            Log.i(TAG, "Message received: " + extras.toString());
 
             if (!GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
                 return;

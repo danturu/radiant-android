@@ -21,13 +21,13 @@ import java.util.List;
 import fm.radiant.android.Radiant;
 import fm.radiant.android.classes.indexer.AbstractIndexer;
 import fm.radiant.android.interfaces.DownloadEventListener;
-import fm.radiant.android.lib.AudioModel;
+import fm.radiant.android.models.AudioModel;
 import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.NetworkUtils;
 import fm.radiant.android.utils.StorageUtils;
 
 public class Syncer implements DownloadEventListener{
-    private static final String TAG = "Syncer";
+    private static final String TAG = Syncer.class.getSimpleName();
 
     public static final int STATE_SYNCED   = 1;
     public static final int STATE_STOPPED  = 2;
@@ -36,100 +36,108 @@ public class Syncer implements DownloadEventListener{
     public static final int STATE_INDEXING = 5;
     public static final int STATE_SYNCING  = 6;
 
-    private int currentState = STATE_IDLE;
-
     private static final String PROPERTY_STATE          = "state";
+    private static final String PROPERTY_ERROR_CODE     = "error_code";
     private static final String PROPERTY_SYNCED_PERCENT = "synced_percent";
     private static final String PROPERTY_ESTIMATED_TIME = "estimated_time";
     private static final String PROPERTY_DOWNLOAD_SPEED = "download_speed";
-    private static final String PROPERTY_ERROR_CODE     = "error_code";
 
     private static final int ERROR_NO_STORAGE  = 1;
     private static final int ERROR_NO_SPACE    = 2;
     private static final int ERROR_NO_INTERNET = 3;
 
-    private final Context context;
+    private final Context               mContext;
+    private final LocalBroadcastManager mEventManager;
 
-    private List<AbstractIndexer> indexers;
+    private List<AbstractIndexer> mIndexers;
 
-    private List<Download> downloads;
-    private Download currentDownload;
+    private List<Download> mDownloads;
+    private Download mCurrentDownload;
 
-    private Integer syncedPercent = 0;
-    private Integer estimatedTime = 0;
-    private Integer downloadSpeed = 0;
-    private Integer receivedBytes = 0;
-    private Integer errorCode;
+    private int mCurrentState = STATE_IDLE;
+    private int mErrorCode;
 
-    private List<Integer> speedSamples = new ArrayList<Integer>(Arrays.asList(0, 0, 0, 0, 0));
-    private RateLimiter   trackLimiter = RateLimiter.create(1.0);
+    private int mSyncedPercent = 0;
+    private int mEstimatedTime = 0;
+    private int mDownloadSpeed = 0;
+    private int mReceivedBytes = 0;
+
+    private List<Integer> mSpeedSamples = new ArrayList<Integer>(Arrays.asList(0, 0, 0, 0, 0));
+    private RateLimiter   mTrackLimiter = RateLimiter.create(1.0);
 
     public Syncer(Context context) {
-        this.context = context;
+        mContext      = context;
+        mEventManager = LocalBroadcastManager.getInstance(context);
     }
 
     public void setIndexers(AbstractIndexer... indexers) {
-        this.indexers = Arrays.asList(indexers);
+        mIndexers = Arrays.asList(indexers);
     }
 
-    public void sync() {
+    public synchronized void start() {
         try {
             index();
-            start();
+            fetch();
 
             stop(STATE_SYNCED);
-        } catch (IOException e) {
-            Log.e(TAG, "An exception has occurred: ", e);
+        } catch (IOException exception) {
+            Log.e(TAG, "An exception has occurred: ", exception);
         }
     }
 
-    public void stop(int state, int errorCode) {
-        this.errorCode = errorCode;
+    public synchronized void touch() {
+        try {
+            index();
+            check();
+
+            stop(STATE_STOPPED);
+        } catch (IOException exception) {
+            Log.e(TAG, "An exception has occurred: ", exception);
+        }
+    }
+
+    public synchronized void stop() {
+        stop(STATE_STOPPED);
+    }
+
+    public synchronized void stop(int state) {
+        setState(state);
+
+        if (mCurrentDownload != null) mCurrentDownload.abort();
+    }
+
+    public synchronized void stop(int state, int errorCode) {
+        mErrorCode = errorCode;
 
         stop(state);
     }
 
-    public void stop(int state) {
-        setState(state);
-
-        if (currentDownload != null) currentDownload.abort();
+    public Integer getState() {
+        return mCurrentState;
     }
 
-    public void sendBroadcast() {
-        Intent intent = new Intent(Radiant.INTENT_SYNCER_STATE_CHANGED);
-
-        // base...
-
-        intent.putExtra(PROPERTY_STATE, currentState);
-
-        // advanced...
-
-        intent.putExtra(PROPERTY_SYNCED_PERCENT, syncedPercent);
-        intent.putExtra(PROPERTY_ESTIMATED_TIME, downloadSpeed);
-        intent.putExtra(PROPERTY_DOWNLOAD_SPEED, estimatedTime);
-        intent.putExtra(PROPERTY_ERROR_CODE,     errorCode);
-
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    public Integer getSyncedPercent() {
+        return mSyncedPercent;
     }
 
-    public int getState() {
-        return currentState;
+    public Integer getDownloadSpeed() {
+        return mDownloadSpeed;
+    }
+
+    public Integer getEstimatedTime() {
+        return mEstimatedTime;
     }
 
     @Override
     public void onSuccess(Download download, final AudioModel model, File file) {
-        AbstractIndexer indexer = Iterables.find(indexers, new Predicate<AbstractIndexer>() {
+        AbstractIndexer indexer = Iterables.find(mIndexers, new Predicate<AbstractIndexer>() {
             @Override
             public boolean apply(AbstractIndexer abstractIndexer) {
                 return model.getClass() == abstractIndexer.getModelClass();
             }
         });
 
-        try {
-            indexer.moveToPersisted(model);
-        } catch (IOException e) {
-            Log.d(TAG, indexer.getClass().getSimpleName() + " must be reindexed: ", e);
-        }
+        indexer.moveToPersisted(model);
     }
 
     @Override
@@ -139,64 +147,58 @@ public class Syncer implements DownloadEventListener{
 
     @Override
     public void onComplete(Download download, AudioModel model) {
-        this.receivedBytes = 0;
+        mReceivedBytes = 0;
     }
 
     @Override
     public void onProgress(Download download, AudioModel model, int receivedBytes, int totalBytes) {
-        if (trackLimiter.tryAcquire()) {
-            speedSamples.remove(0);
-            speedSamples.add(receivedBytes - this.receivedBytes);
+        if (mTrackLimiter.tryAcquire()) {
+            mSpeedSamples.remove(0); mSpeedSamples.add(receivedBytes - mReceivedBytes);
 
-            this.receivedBytes = receivedBytes;
-            this.syncedPercent = calculateSyncedPercent();
-            this.downloadSpeed = calculateDownloadSpeed();
-            this.estimatedTime = calculateEstimatedTime();
+            mReceivedBytes = receivedBytes;
+            mSyncedPercent = calculateSyncedPercent();
+            mDownloadSpeed = calculateDownloadSpeed();
+            mEstimatedTime = calculateEstimatedTime();
 
-            sendBroadcast();
+            sendProgressBroadcast();
         }
     }
 
     private void index() throws IOException {
         setState(STATE_INDEXING);
 
-        downloads  = new ArrayList<Download>();
+        mDownloads = new ArrayList<Download>();
         int frozen = 0;
         int offset = 0;
 
-        for(AbstractIndexer indexer: indexers) {
+        for(AbstractIndexer indexer: mIndexers) {
             indexer.index(); LibraryUtils.inspect(indexer);
 
             for (AudioModel model : indexer.getRemotedQueue()) {
-                Download download = new Download(context, model, this);
+                Download download = new Download(mContext, model, this);
 
                 if (indexer.isFrontQueue()) {
                     offset = -1; frozen++;
                 } else {
-                    offset = downloads.size() - frozen > 0 ? RandomUtils.nextInt(downloads.size() - frozen) : 0;
+                    offset = mDownloads.size() - frozen > 0 ? RandomUtils.nextInt(mDownloads.size() - frozen) : 0;
                 }
 
-                downloads.add(offset + frozen, download);
+                mDownloads.add(offset + frozen, download);
             }
         }
     }
 
-    private void start() throws IOException {
+    private void fetch() throws IOException {
         setState(STATE_SYNCING);
 
-        for (Download download : downloads) {
-            checkRequirements(); throwOnInterrupt();
+        for (Download download : mDownloads) {
+            check(); throwOnInterrupt();
 
-            (currentDownload = download).start();
+            (mCurrentDownload = download).start();
         }
     }
 
-    private void setState(int state) {
-        this.currentState = state;
-        sendBroadcast();
-    }
-
-    private void checkRequirements() {
+    private void check() {
         if (!StorageUtils.isExternalStorageWritable()) {
             stop(STATE_FAILED, ERROR_NO_STORAGE);
         } else
@@ -208,21 +210,40 @@ public class Syncer implements DownloadEventListener{
         if (!NetworkUtils.isNetworkConnected()) {
             stop(STATE_IDLE, ERROR_NO_INTERNET);
         }
+    }
 
-        if (currentState != STATE_SYNCING) {
-            Log.d(TAG, "must be stopped: " + Integer.valueOf(errorCode));
-        }
+    private void sendStateBroadcast() {
+        Intent intent = new Intent(Radiant.INTENT_SYNCER_STATE_CHANGED);
+
+        intent.putExtra(PROPERTY_STATE,      mCurrentState);
+        intent.putExtra(PROPERTY_ERROR_CODE, mErrorCode);
+
+        mEventManager.sendBroadcast(intent);
+    }
+
+    private void sendProgressBroadcast() {
+        Intent intent = new Intent(Radiant.INTENT_SYNCER_PROGRESS_CHANGED);
+
+        intent.putExtra(PROPERTY_SYNCED_PERCENT, mSyncedPercent);
+        intent.putExtra(PROPERTY_ESTIMATED_TIME, mDownloadSpeed);
+        intent.putExtra(PROPERTY_DOWNLOAD_SPEED, mEstimatedTime);
+
+        mEventManager.sendBroadcast(intent);
     }
 
     private void throwOnInterrupt() throws InterruptedIOException {
-        if (currentState != STATE_SYNCING) throw new InterruptedIOException();
+        if (mCurrentState != STATE_SYNCING) throw new InterruptedIOException();
+    }
+
+    private void setState(int state) {
+        mCurrentState = state; sendStateBroadcast();
     }
 
     private Integer calculateSyncedPercent() {
         double persistedCount = 0;
         double totalCount     = 0;
 
-        for (AbstractIndexer indexer : indexers) {
+        for (AbstractIndexer indexer : mIndexers) {
             persistedCount += indexer.getPersistedCount();
             totalCount     += indexer.getTotalCount();
         }
@@ -235,22 +256,22 @@ public class Syncer implements DownloadEventListener{
     }
 
     private Integer calculateDownloadSpeed() {
-        int receivedBytes = 0; for (int sample : speedSamples) {
+        int receivedBytes = 0; for (int sample : mSpeedSamples) {
             receivedBytes += sample;
         }
 
-        return receivedBytes / speedSamples.size();
+        return receivedBytes / mSpeedSamples.size();
     }
 
     private Integer calculateEstimatedTime() {
-        int remotedBytes = 0; for (AbstractIndexer indexer : indexers) {
+        int remotedBytes = 0; for (AbstractIndexer indexer : mIndexers) {
             remotedBytes += indexer.getRemotedBytes();
         }
 
-        if (downloadSpeed == 0) {
+        if (mDownloadSpeed == 0) {
             return Integer.MAX_VALUE;
         } else {
-            return (remotedBytes + receivedBytes) / downloadSpeed;
+            return (remotedBytes + mReceivedBytes) / mDownloadSpeed;
         }
     }
 }
