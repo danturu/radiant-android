@@ -3,6 +3,7 @@
         <item name="android:windowContentOverlay">@drawable/actionbar_shadow</item>
         <item name="actionBarStyle">@style/ActionBar</item>
         <item name="homeAsUpIndicator">@drawable/up_indicator</item>
+        <item name="circleProgressBarStyle">@style/CircleProgressBar</item>
     </style>
 
     <style name="ActionBar" parent="@style/Widget.AppCompat.ActionBar">
@@ -14,5 +15,12 @@
         <item name="android:progressDrawable">@drawable/slider_volume_progress</item>
         <item name="android:thumb">@drawable/slider_volume_thumb</item>
         <item name="android:thumbOffset">16dip</item>
+    </style>
+
+    <style name="CircleProgressBar">
+        <item name="progress_backgroundWidth">10dp</item>
+        <item name="progress_foregroundWidth">10dp</item>
+        <item name="progress_backgroundColor">#FF000000</item>
+        <item name="progress_foregroundColor">#FFFFFFFF</item>
     </style>
 </resources>

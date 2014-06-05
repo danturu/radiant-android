@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import fm.radiant.android.classes.syncer.Syncer;
+import fm.radiant.android.lib.syncer.Syncer;
 import fm.radiant.android.services.DownloadService;
 import fm.radiant.android.tasks.SyncTask;
 import fm.radiant.android.utils.LibraryUtils;

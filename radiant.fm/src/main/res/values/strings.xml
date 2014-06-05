@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name">radiant.fm</string>
 
+    <string name="title_scheduler">Расписание</string>
+    <string name="title_preferences">Настройки</string>
+
     <string name="button_ok">OK</string>
     <string name="button_cancel">Отмена</string>
     <string name="button_repair">Перепривязать</string>

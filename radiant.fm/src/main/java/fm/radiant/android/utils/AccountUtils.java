@@ -1,17 +1,16 @@
 package fm.radiant.android.utils;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.github.kevinsawicki.http.HttpRequest;
 
 import java.io.IOException;
 
+import de.greenrobot.event.EventBus;
 import fm.radiant.android.Config;
-import fm.radiant.android.Radiant;
+import fm.radiant.android.Events;
 import fm.radiant.android.models.Device;
 import fm.radiant.android.models.Place;
 
@@ -69,8 +68,7 @@ public class AccountUtils {
                 currentPlace = place;
                 Place.store(preferences, data);
 
-                Intent intent = new Intent(Radiant.INTENT_PLACE_CHANGED);
-                LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                EventBus.getDefault().postSticky(new Events.PlaceChangedEvent(place));
 
                 Log.i(TAG, "Place was synced");
             } else {

@@ -5,9 +5,9 @@ import android.util.Log;
 
 import org.apache.commons.lang.StringUtils;
 
-import fm.radiant.android.classes.indexer.AbstractIndexer;
-import fm.radiant.android.classes.player.Player;
-import fm.radiant.android.classes.syncer.Syncer;
+import fm.radiant.android.lib.indexer.AbstractIndexer;
+import fm.radiant.android.lib.player.Player;
+import fm.radiant.android.lib.syncer.Syncer;
 
 public class LibraryUtils {
     private static Syncer sSyncer;

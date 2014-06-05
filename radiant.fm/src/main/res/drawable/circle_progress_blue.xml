@@ -6,7 +6,12 @@
     android:pivotY="50%"
     android:toDegrees="-90">
 
-    <shape android:shape="ring" android:thickness="6dp">
+    <shape
+        android:innerRadius="@dimen/player_syncer_progress_inner_radius"
+        android:shape="ring"
+        android:thickness="@dimen/player_syncer_progress_thickness"
+        android:useLevel="true">
+
         <solid android:color="#157dfb" />
     </shape>
 </rotate>

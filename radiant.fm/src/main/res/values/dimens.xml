@@ -1,4 +1,7 @@
 <resources>
     <dimen name="activity_horizontal_margin">15dp</dimen>
     <dimen name="activity_vertical_margin">15dp</dimen>
+
+    <dimen name="player_syncer_progress_inner_radius">32dp</dimen>
+    <dimen name="player_syncer_progress_thickness">8dp</dimen>
 </resources>

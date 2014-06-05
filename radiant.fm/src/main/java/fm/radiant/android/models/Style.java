@@ -22,6 +22,18 @@ public class Style extends Model {
         return Lists.newArrayList(ids);
     }
 
+    public static List<String> collectNames(List<Style> styles) {
+        Iterable<String> names = Iterables.transform(styles, new Function<Style, String>() {
+            @Override
+            public String apply(Style style) {
+                return style.getName();
+            }
+        });
+
+        return Lists.newArrayList(names);
+
+    }
+
     public String getName() {
         return name;
     }

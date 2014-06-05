@@ -1,6 +1,8 @@
 <resources>
     <style name="CustomTheme" parent="Theme.AppCompat.Light">
+        <item name="android:windowContentOverlay">@drawable/actionbar_shadow</item>
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:homeAsUpIndicator">@drawable/up_indicator</item>
+        <item name="circleProgressBarStyle">@style/CircleProgressBar</item>
     </style>
 </resources>

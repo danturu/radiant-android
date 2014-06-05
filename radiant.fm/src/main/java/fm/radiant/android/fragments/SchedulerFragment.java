@@ -1,32 +1,28 @@
 package fm.radiant.android.fragments;
 
-import android.content.BroadcastReceiver;
+import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Typeface;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextUtils;
-import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,76 +31,76 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import fm.radiant.android.Events;
 import fm.radiant.android.R;
 import fm.radiant.android.Radiant;
-import fm.radiant.android.comparators.NextPeriodComparator;
+import fm.radiant.android.MainActivity;
+import fm.radiant.android.lib.EventBusFragment;
+import fm.radiant.android.lib.TypefaceCache;
+import fm.radiant.android.lib.TypefaceSpan;
 import fm.radiant.android.models.Period;
 import fm.radiant.android.models.Style;
-import fm.radiant.android.utils.AccountUtils;
+import fm.radiant.android.utils.ParseUtils;
 
-public class SchedulerFragment extends Fragment implements View.OnClickListener {
-    PeriodsAdapter periodsAdapter;
-    ListView periodsView;
+import static fm.radiant.android.lib.TypefaceCache.FONT_MUSEO_500;
 
+public class SchedulerFragment extends EventBusFragment {
+    public static String TAG = PlayerFragment.class.getSimpleName();
 
-    private BroadcastReceiver renderReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            render();
-        }
-    };
+    private PeriodsAdapter mPeriodsAdapter;
+    private ListView mPeriodsView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_scheduler, container, false);
 
-        periodsAdapter = new PeriodsAdapter(getActivity());
+        setHasOptionsMenu(true);
 
-        periodsView = (ListView) view.findViewById(R.id.periods);
-        periodsView.setAdapter(periodsAdapter);
+        mPeriodsAdapter = new PeriodsAdapter(getActivity());
+
+        mPeriodsView = (ListView) view.findViewById(R.id.periods);
+        mPeriodsView.setAdapter(mPeriodsAdapter);
+
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(Radiant.formatHeader(getString(R.string.title_scheduler)));
 
         return view;
     }
 
     @Override
-    public void onClick(View view) {
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_preferences:
+                openPreferencesFragment();
+                return true;
+        }
 
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void openPreferencesFragment() {
+        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
+        transaction.replace(MainActivity.getContentViewCompat(), new PreferencesFragment(), PreferencesFragment.TAG);
+        transaction.addToBackStack(SchedulerFragment.TAG);
+        transaction.commit();
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle("Расписание");
-
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(renderReceiver,  new IntentFilter(Radiant.INTENT_PLACE_CHANGED));
-        render();
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_player, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
+    public void onEventMainThread(Events.PlaceChangedEvent event) {
+        List<Period> periods = event.getPlace().getPeriods();
 
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(renderReceiver);
-    }
-
-
-    private void render() {
-        List<Period> periods = AccountUtils.getPlace().getPeriods();
-
-        periodsAdapter.reset(periods);
+        mPeriodsAdapter.reset(periods);
     }
 
     private class PeriodsAdapter extends BaseAdapter {
-        int size = 0;
         Context context;
-        //List<Period> items = new ArrayList<Period>();
-       // ImmutableListMultimap<Integer, Period> items;
         Map<Integer, Collection<Period>> mapped;
-        ImmutableListMultimap<Integer, Period> multimap;
-        Typeface museo;
-        Typeface plumb;
 
         List<Object> stored = new ArrayList<Object>();
 
@@ -114,17 +110,11 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
             this.context = context;
 
             inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            museo = Typeface.createFromAsset(context.getAssets(), "fonts/museo_sans_500.ttf");
-            plumb = Typeface.createFromAsset(context.getAssets(), "fonts/plumb_condensed_light.ttf");
-
-          //  reset(new ArrayList<Period>());
         }
 
         public void reset(List<Period> items) {
-
             ArrayList<Period> clone = new ArrayList<Period>(items);
-            Collections.sort(clone, new NextPeriodComparator());
+            Collections.sort(clone, new Period.NextPeriodComparator());
 
             stored.clear();
 
@@ -132,11 +122,9 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
 
             for (int i = 0; i < 7; i++) {
                 mapped.put(i, new ArrayList<Period>());
-                size++;
             }
 
             for (Period period : clone) {
-                Log.d("day", "is" + period.getDay());
                 mapped.get(period.getDay()).add(period);
             }
 
@@ -148,33 +136,12 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
                 if (periods.isEmpty()) {
                     stored.add(-1);
                 } else {
-                    int i = 0;
                     for (Period p : periods) {
                         stored.add(p);
-                    //    if (i != periods.size()-1) stored.add(-2);
-                      //  i++;
                     }
                 }
             }
-/*
-            for (Collection<Period> periods : mapped.values()) {
-                if (periods.isEmpty()) size++;
-            }
 
-/*
-            List<Period> clone = new ArrayList<Period>(items);
-
-            Collections.sort(clone, new PeriodPositionComparator());
-
-            multimap = Multimaps.index(clone, new Function<Period, Integer>() {
-                @Override
-                public Integer apply(Period period) {
-                    return period.getDay();
-                }
-            });
-
-            mapped = multimap.asMap();
- */
             notifyDataSetChanged();
         }
 
@@ -209,12 +176,16 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Log.d("getView", ""+position + " type: " + getItemViewType(position));
+        public int getViewTypeCount() {
+            return 3;
+        }
 
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
             switch (getItemViewType(position)) {
                 case 0:
                     return getHeaderView(position, convertView, parent);
+
                 case -1:
                     return getEmptyView(position, convertView, parent);
 
@@ -223,66 +194,32 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
             }
 
             throw new IllegalArgumentException("Invalid view: " + String.valueOf(position));
-
-            /*
-                return(getHeaderView(position, convertView, parent)); }
-                View row=convertView;
-
-            View view = convertView;
-
-            if (view == null) {
-                view = inflater.inflate(R.layout.partial_period, null);
-            }*/
-
-            //if (style != null) {
-            //    Long availableMusic = (style.getDownloadedMusicAmount() < style.getRequiredMusicAmount() ? style.getDownloadedMusicAmount() : style.getRequiredMusicAmount());
-            //    Integer percentage = (int) ((double) availableMusic / (double) style.getRequiredMusicAmount() * 100);
-//
-            //    TextView nameView = (TextView) view.findViewById(R.id.text_name);
-            //    TextView downloadedView = (TextView) view.findViewById(R.id.text_downloaded);
-            //    ProgressBar downloadedProgress = (ProgressBar) view.findViewById(R.id.downloaded);
-//
-            //    nameView.setText(style.getName());
-            //    downloadedView.setText(percentage.toString() + "%");
-//
-            //    downloadedProgress.setMax(100);
-            //    downloadedProgress.setProgress(percentage);
-            //}
         }
 
         private View getHeaderView(int position, View convertView, ViewGroup parent) {
             View view = convertView;
 
-
-           //if (view == null || i2 != R.layout.partial_day) {
-                view = inflater.inflate(R.layout.partial_day, null);
-           //}
-
-            Integer day = (Integer) getItem(position);
-
-            DateTime now = new DateTime().withDayOfWeek(day + 1);
-            String dayName = WordUtils.capitalize((DateTimeFormat.forPattern("EEEE").print(now)));
-
+            if (view == null) view = inflater.inflate(R.layout.partial_scheduler_day, null);
 
             TextView dayNameView = (TextView) view.findViewById(R.id.text_day_name);
 
-            if (dayNameView == null) {
-                return view;
-            }
-            dayNameView.setTypeface(museo);
-            dayNameView.setText(dayName);
+            dayNameView.setTypeface(TypefaceCache.get(TypefaceCache.FONT_MUSEO_500));
+            dayNameView.setText(ParseUtils.humanizeDay((Integer) getItem(position)));
 
             return view;
         }
 
         private View getEmptyView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
+            TextView view = (TextView) convertView;
 
-//            if (view == null) {
-                view = inflater.inflate(R.layout.period_empty, null);
-  //          }
+            if (view== null) view = new TextView(context);
 
-            ((TextView) view.findViewById(R.id.text_empty)).setTypeface(museo);
+            view.setTypeface(TypefaceCache.get(TypefaceCache.FONT_MUSEO_500));
+            view.setText("ТИШИНА");
+            view.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            view.setTextColor(Color.parseColor("#999999"));
+            view.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.FILL_PARENT, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics())));
+            view.setGravity(Gravity.CENTER);
 
             return view;
         }
@@ -290,15 +227,9 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
         private View getItemView(int position, View convertView, ViewGroup parent) {
             View view = convertView;
 
-            Period period = (Period) getItem(position);
+            final Period period = (Period) getItem(position);
 
-            view = inflater.inflate(R.layout.partial_period, null);
-
-            if (stored.size() < position && (stored.get(position + 1) instanceof Period)) {
-
-
-               // view.setLayoutParams(params);
-            }
+            if (view == null) view = inflater.inflate(R.layout.partial_scheduler_period, null);
 
             // color
 
@@ -311,29 +242,40 @@ public class SchedulerFragment extends Fragment implements View.OnClickListener 
 
             TextView timeText = (TextView) view.findViewById(R.id.text_time);
 
-            timeText.setTypeface(plumb);
+            timeText.setTypeface(TypefaceCache.get(TypefaceCache.FONT_PLUMB_LIGHT));
             timeText.setTextColor(color);
 
-            String startAt = StringUtils.leftPad(Integer.toString(period.getStartAt() / 60), 2, '0') + ":" + StringUtils.rightPad(Integer.toString(period.getStartAt() % 60), 2, '0');
-            String endAt = StringUtils.leftPad(Integer.toString(period.getEndAt() / 60), 2, '0') + ":" + StringUtils.rightPad(Integer.toString(period.getEndAt() % 60), 2, '0');
-
-            timeText.setText( startAt + " - " + endAt);
+            final String time = ParseUtils.humanizeTimeRange(period.getStartAt(), period.getEndAt());
+            timeText.setText(time);
 
             // style
 
-            List<String> stylesNames = Lists.newArrayList(Iterables.transform(period.getGenre().getStyles(),
-                    new Function<Style, String>() {
-                        @Override
-                        public String apply(Style style) {
-                            return style.getName();
-                        }
-                    }
-            ));
-
             TextView stylesText = (TextView) view.findViewById(R.id.text_styles);
 
-            stylesText.setTypeface(museo);
-            stylesText.setText(TextUtils.join(" · ", stylesNames));
+            stylesText.setTypeface(TypefaceCache.get(TypefaceCache.FONT_MUSEO_500));
+            stylesText.setText(TextUtils.join(" · ", Style.collectNames(period.getGenre().getStyles())));
+
+            ImageButton infoButton = (ImageButton) view.findViewById(R.id.button_info);
+            infoButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    SpannableString title = new SpannableString(ParseUtils.humanizeDay(period.getDay()) + " " + time);
+                    title.setSpan(new TypefaceSpan(FONT_MUSEO_500), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    SpannableString description = new SpannableString(period.getGenre().getDescription());
+                    description.setSpan(new TypefaceSpan(TypefaceCache.FONT_MUSEO_300), 0, description.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    SpannableString ok = new SpannableString(getString(R.string.button_ok));
+                    ok.setSpan(new TypefaceSpan(TypefaceCache.FONT_MUSEO_500), 0, ok.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    AlertDialog.Builder infoDialog = new AlertDialog.Builder(getActivity());
+                    infoDialog.setTitle(title);
+                    infoDialog.setMessage(description);
+                    infoDialog.setPositiveButton(ok, null);
+                    infoDialog.setCancelable(true);
+                    infoDialog.show();
+                }
+            });
 
             return view;
         }

@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import de.greenrobot.event.EventBus;
+import fm.radiant.android.Events;
 import fm.radiant.android.utils.ParseUtils;
 
 public class Place extends Model {
@@ -36,7 +38,11 @@ public class Place extends Model {
     }
 
     public static Place retrieve(SharedPreferences storage) throws IOException {
-        return ParseUtils.fromJSON(storage.getString(TAG, ""), Place.class);
+        Place place = ParseUtils.fromJSON(storage.getString(TAG, ""), Place.class);
+
+        EventBus.getDefault().postSticky(new Events.PlaceChangedEvent(place));
+
+        return place;
     }
 
     public static void store(SharedPreferences storage, String data) {

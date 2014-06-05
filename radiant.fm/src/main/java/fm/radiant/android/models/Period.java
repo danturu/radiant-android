@@ -2,13 +2,13 @@ package fm.radiant.android.models;
 
 import com.google.gson.annotations.Expose;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-
-import fm.radiant.android.comparators.CurrentPeriodComparator;
 
 import static org.joda.time.DateTimeFieldType.dayOfWeek;
 import static org.joda.time.DateTimeFieldType.millisOfDay;
@@ -78,5 +78,19 @@ public class Period extends Model {
 
     public boolean isNow() {
         return getInterval().containsNow();
+    }
+
+    public static class CurrentPeriodComparator implements Comparator<Period> {
+        @Override
+        public int compare(Period first, Period second) {
+            return ObjectUtils.compare(first.getInterval().getStart(), second.getInterval().getStart());
+        }
+    }
+
+    public static class NextPeriodComparator implements Comparator<Period> {
+        @Override
+        public int compare(Period first, Period second) {
+            return ObjectUtils.compare(first.getDay() * 10000 + first.getStartAt(), second.getDay() * 10000 + second.getStartAt());
+        }
     }
 }

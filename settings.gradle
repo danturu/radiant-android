@@ -1,1 +1,1 @@
-include ':radiant.fm'
+include ':radiant.fm', 'widget.circular_progress_bar'

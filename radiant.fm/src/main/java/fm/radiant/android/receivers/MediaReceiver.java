@@ -6,7 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import fm.radiant.android.classes.player.Player;
+import fm.radiant.android.R;
+import fm.radiant.android.lib.player.Player;
 import fm.radiant.android.utils.LibraryUtils;
 
 public class MediaReceiver extends BroadcastReceiver {

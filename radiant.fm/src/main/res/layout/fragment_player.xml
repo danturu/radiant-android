@@ -1,137 +1,211 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/window_content_overlay">
+    android:background="@drawable/window_content_overlay"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:padding="15dp"
-        android:orientation="vertical"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/view_period"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentEnd="false"
         android:layout_above="@+id/fragment_status"
-        android:id="@+id/period"
-        android:background="#DDDDDD">
+        android:orientation="vertical"
+        android:padding="15dp">
 
-        <LinearLayout
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="12dp"
-            android:orientation="horizontal"
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical">
-
-            <fm.radiant.android.lib.widgets.SquareButton
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:id="@+id/button_schedule"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/button_circle_white"
-                android:src="@drawable/player_button_schedule" />
-
-            <fm.radiant.android.lib.widgets.SquareButton
-                android:layout_weight="4"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:id="@+id/button_play"
-                android:layout_marginLeft="15dp"
-                android:layout_marginRight="15dp"
-                android:background="@drawable/button_circle_white"
-                android:src="@drawable/player_button_play" />
-
-            <fm.radiant.android.lib.widgets.SquareButton
-                android:layout_width="0dp"
-                android:layout_weight="3"
-                android:layout_height="0dp"
-                android:id="@+id/button_announce"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/button_circle_white"
-                android:src="@drawable/player_button_announce" />
-        </LinearLayout>
-
-        <RelativeLayout
-            android:orientation="horizontal"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/volume"
-                android:id="@+id/imageView"
-                android:layout_marginLeft="23dp"
-                android:layout_marginTop="0dp"
-                android:layout_gravity="center_vertical" />
-
-            <SeekBar
-                android:layout_marginTop="5dp"
-                android:layout_marginLeft="40dp"
-                android:layout_marginRight="40dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/slider_volume"
-                android:progressDrawable="@drawable/slider_volume_progress"
-                android:thumb="@drawable/slider_volume_thumb"
-                android:thumbOffset="7dp"
-                android:layout_gravity="center_vertical" />
-
-        </RelativeLayout>
-
-        <ScrollView
-            android:layout_marginTop="10dp"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:id="@+id/scrollView"
-            android:overScrollMode="never">
+            android:orientation="vertical" >
 
             <LinearLayout
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <fm.radiant.android.lib.widgets.SquareButton
+                    android:id="@+id/button_schedule"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="3"
+                    android:background="@drawable/button_circle_white"
+                    android:src="@drawable/player_button_schedule" />
+
+                <fm.radiant.android.lib.widgets.SquareButton
+                    android:id="@+id/button_play"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_weight="4"
+                    android:background="@drawable/button_circle_white"
+                    android:src="@drawable/player_button_play" />
+
+                <fm.radiant.android.lib.widgets.SquareButton
+                    android:id="@+id/button_announce"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="3"
+                    android:background="@drawable/button_circle_white"
+                    android:src="@drawable/player_button_announce" />
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="23dp"
+                    android:layout_marginTop="0dp"
+                    android:src="@drawable/volume" />
+
+                <SeekBar
+                    android:id="@+id/slider_volume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginRight="40dp"
+                    android:layout_marginTop="5dp"
+                    android:progressDrawable="@drawable/slider_volume_progress"
+                    android:thumb="@drawable/slider_volume_thumb"
+                    android:thumbOffset="7dp" />
+            </RelativeLayout>
+        </LinearLayout>
+
+            <LinearLayout
+                android:background="@drawable/player_period_shadow"
                 android:orientation="vertical"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent">
 
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:text="New Text"
-                    android:id="@+id/period_time"
-                    android:textSize="17dp"
-                    android:gravity="center" />
+                <LinearLayout
+                    android:id="@+id/view_empty_period"
+                    android:orientation="vertical" android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:text="New Text"
-                    android:id="@+id/period_styles"
-                    android:textSize="17dp"
-                    android:gravity="center" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="EMPTY"
+                        android:id="@+id/textView"
+                        android:layout_gravity="center_horizontal" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="10dp"
+                <LinearLayout
+                    android:id="@+id/view_normal_period"
+                    android:orientation="vertical"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="New Text"
-                    android:id="@+id/period_description"
-                    android:textSize="17dp"
-                    android:gravity="center" />
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp">
+
+                    <TextView
+                        android:id="@+id/text_period_time"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textSize="17dp" />
+
+                    <TextView
+                        android:id="@+id/text_period_styles"
+                        android:layout_width="fill_parent"
+                        android:layout_height="17dp"
+                        android:text="skdc sdjcn sdc sdc sdc sd c sdc sd cs c sdcsdcsdcsdcs sdcsdcsdc"
+                        android:textSize="17dp"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit ="marquee_forever"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:scrollHorizontally="true"/>
+
+                    <TextView
+                        android:id="@+id/text_period_description"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginTop="10dp"
+                        android:textSize="17dp"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:scrollHorizontally="true" />
+
+                </LinearLayout>
             </LinearLayout>
-        </ScrollView>
     </LinearLayout>
 
-    <fragment
-        android:name="fm.radiant.android.fragments.PlayerStatusFragment"
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="horizontal"
         android:id="@+id/fragment_status"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true" />
+        android:background="#FFFFFF"
+        android:paddingTop="10dp"
+        android:layout_alignParentBottom="true"
+        android:paddingBottom="10dp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp">
+
+        <fm.radiant.android.lib.widgets.CircleProgressBar
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:id="@+id/progress_syncer_progress"
+            android:text="sc"
+            app:progress="50"
+            app:max="100"
+            app:progress_backgroundColor="#BFBFBF"
+            app:progress_foregroundColor="#92278f"
+            app:progress_backgroundWidth="2dp"
+            app:progress_foregroundWidth="6dp"
+            android:textSize="17dp" />
+
+
+        <TextView
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:drawableTop="@drawable/timer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:layout_weight="4"
+            android:id="@+id/text_download_speed"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center_vertical"
+            android:textSize="15dp"
+            android:textColor="#7a7a7a" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:drawableTop="@drawable/download"
+            android:text="New Text"
+            android:id="@+id/text_estimated_time"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center_vertical"
+            android:textSize="15dp"
+            android:textColor="#7a7a7a"/>
+
+    </LinearLayout>
+
 
 </RelativeLayout>

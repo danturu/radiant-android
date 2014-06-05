@@ -7,6 +7,8 @@ import android.os.Bundle;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import de.greenrobot.event.EventBus;
+import fm.radiant.android.Events;
 import fm.radiant.android.receivers.MessagesReceiver;
 import fm.radiant.android.tasks.SyncTask;
 import fm.radiant.android.utils.MessagesUtils;
@@ -41,6 +43,7 @@ public class MessagesService extends IntentService {
             }
 
             if (ACTION_UNPAIR.equals(action)) {
+                EventBus.getDefault().post(new Events.PlaceUnpairedEvent());
                 return;
             }
         } finally {

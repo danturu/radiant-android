@@ -3,7 +3,7 @@ package fm.radiant.android.tasks;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import fm.radiant.android.classes.cleaner.AbstractCleaner;
+import fm.radiant.android.lib.cleaner.AbstractCleaner;
 
 public class CleanTask extends AsyncTask<AbstractCleaner, Void, Void> {
     private static final String TAG = CleanTask.class.getSimpleName();

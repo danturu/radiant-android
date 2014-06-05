@@ -11,7 +11,7 @@ import com.github.kevinsawicki.http.HttpRequest;
 import java.io.IOException;
 
 import fm.radiant.android.R;
-import fm.radiant.android.activities.AuthActivity;
+import fm.radiant.android.AuthActivity;
 import fm.radiant.android.utils.AccountUtils;
 import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.MessagesUtils;

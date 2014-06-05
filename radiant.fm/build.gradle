@@ -2,7 +2,7 @@ apply plugin: 'android'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.3"
+    buildToolsVersion '19.0.3'
 
     defaultConfig {
         minSdkVersion 10
@@ -54,4 +54,6 @@ dependencies {
     compile 'com.google.android.gms:play-services:4.3.+'
     compile 'com.google.guava:guava-jdk5:17.0'
     compile 'com.google.code.gson:gson:2.2.4'
+    compile 'de.greenrobot:eventbus:2.2.1'
+    compile 'com.squareup.retrofit:retrofit:1.5.1'
 }
