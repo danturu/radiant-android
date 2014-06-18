@@ -4,22 +4,26 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-public class NetworkUtils {
-    private static final String TAG = "NetworkUtils";
+import static fm.radiant.android.lib.syncer.Syncer.STATE_STOPPED;
 
-    private static Context context;
-    private static ConnectivityManager connectivityManager;
+public class NetworkUtils {
+    private static Context             sContext;
+    private static ConnectivityManager sConnectivityManager;
 
     public static void initialize(Context context) {
-        NetworkUtils.context             = context;
-        NetworkUtils.connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        sContext             = context;
+        sConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     public static boolean isNetworkConnected() {
-        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        NetworkInfo activeNetwork = sConnectivityManager.getActiveNetworkInfo();
 
         // there can be no active network...
 
         return activeNetwork != null && activeNetwork.isConnected();
+    }
+
+    public static boolean canUseNetwork() {
+        return LibraryUtils.getSyncer().getState() != STATE_STOPPED;
     }
 }

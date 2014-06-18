@@ -4,6 +4,7 @@
         <item name="actionBarStyle">@style/ActionBar</item>
         <item name="homeAsUpIndicator">@drawable/up_indicator</item>
         <item name="circleProgressBarStyle">@style/CircleProgressBar</item>
+        <item name="imageSquareButtonStyle">@style/ImageSquareButton</item>
     </style>
 
     <style name="ActionBar" parent="@style/Widget.AppCompat.ActionBar">
@@ -22,5 +23,9 @@
         <item name="progress_foregroundWidth">10dp</item>
         <item name="progress_backgroundColor">#FF000000</item>
         <item name="progress_foregroundColor">#FFFFFFFF</item>
+    </style>
+
+    <style name="ImageSquareButton">
+        <item name="drawableCenter">@null</item>
     </style>
 </resources>

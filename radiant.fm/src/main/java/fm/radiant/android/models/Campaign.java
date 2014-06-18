@@ -12,6 +12,9 @@ import java.util.List;
 
 public class Campaign extends Model {
     @Expose
+    private String name;
+
+    @Expose
     private int periodicity;
 
     @Expose
@@ -32,7 +35,7 @@ public class Campaign extends Model {
         return Iterables.find(cloned, new Predicate<Campaign>() {
             @Override
             public boolean apply(Campaign campaign) {
-                return ((now.getMinuteOfHour() - (now.getMinuteOfHour() % 5)) % campaign.getPeriodicity()) == 0;
+                return ((now.getMinuteOfHour() - (now.getMinuteOfHour() % 10)) % campaign.getPeriodicity()) == 0 && !campaign.getAds().isEmpty();
             }
         }, null);
     }
@@ -46,6 +49,10 @@ public class Campaign extends Model {
         Collections.shuffle(cloned);
 
         return cloned.subList(0, selectivity);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getPeriodicity() {

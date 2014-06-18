@@ -14,86 +14,88 @@ import java.util.Stack;
 import fm.radiant.android.models.AudioModel;
 
 public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener{
-    private final Context context;
-    private final MediaPlayer player;
+    private final int VALUE_ENDING_MARKER_SECONDS = 60;
 
-    private OnProgressListener currentEventListener;
-    private AudioModel currentTrack;
-    private float currentVolume;
+    private final Context     mContext;
+    private final MediaPlayer mPlayer = new MediaPlayer();
 
-    private final Stack<AudioModel> tracks;
-    private final List<Cue> cues;
+    private OnChangeListener mCurrentChangeListener;
+    private AudioModel       mCurrentTrack;
+    private float            mCurrentVolume = 1.0f;
 
-    private final Handler timer = new Handler();
-    private final Handler fader = new Handler();
+    private final Stack<AudioModel> mTracks = new Stack<AudioModel>();
+    private final List<Cue> mCues = new ArrayList<Cue>();
+
+    private final Handler mTimer = new Handler();
+    private final Handler mFader = new Handler();
 
     public Deck(Context context) {
-        this.context = context;
+        mContext = context;
 
-        this.player = new MediaPlayer();
-        this.player.setOnPreparedListener(this);
-        this.player.setOnCompletionListener(this);
-        this.player.setOnErrorListener(this);
-
-        this.tracks = new Stack<AudioModel>();
-        this.cues   = new ArrayList<Cue>();
-
-        this.currentVolume = 1.0f;
+        mPlayer.setOnPreparedListener(this);
+        mPlayer.setOnCompletionListener(this);
+        mPlayer.setOnErrorListener(this);
     }
 
     @Override
     public void onPrepared(MediaPlayer player) {
-        currentEventListener.onReady(this, player, currentTrack);
+        mCurrentChangeListener.onReady(this, mCurrentTrack);
     }
 
     @Override
     public void onCompletion(MediaPlayer player) {
-        if (tracks.isEmpty()) {
-            currentEventListener.onComplete(this, player);
+        if (mTracks.isEmpty()) {
+            mCurrentChangeListener.onEmpty(this);
         } else {
-            prepare(context, tracks.pop());
+            prepare(mContext, mTracks.pop());
         }
     }
 
     @Override
     public boolean onError(MediaPlayer player, int what, int extra) {
-        currentEventListener.onFailure(this, player, currentTrack, new IOException("Error code: " + extra));
+        mCurrentChangeListener.onFailure(this, mCurrentTrack, new IOException("Error code: " + extra));
         return false;
     }
 
     public MediaPlayer getPlayer() {
-        return player;
+        return mPlayer;
     }
 
     public AudioModel getAudio() {
-        return currentTrack;
+        return mCurrentTrack;
     }
 
-    public void load(final List<? extends AudioModel> tracks, OnProgressListener eventListener) {
-        this.currentEventListener = eventListener;
+    public void load(final List<? extends AudioModel> tracks, OnChangeListener changeListener) {
+        mCurrentChangeListener = changeListener;
         enqueue(tracks);
 
         if (tracks.isEmpty()) {
-            currentEventListener.onComplete(this, player);
+            mCurrentChangeListener.onEmpty(this);
         } else {
-            prepare(context, this.tracks.pop());
+            prepare(mContext, mTracks.pop());
         }
     }
 
-    public void load(AudioModel track, OnProgressListener onProgressListener) {
-        load(Arrays.asList(track), onProgressListener);
+    public void load(AudioModel track, OnChangeListener changeListener) {
+        load(Arrays.asList(track), changeListener);
+    }
+
+    public void eject() {
+        mCurrentTrack = null;
+        mTracks.clear();
+        mPlayer.release();
     }
 
     public synchronized void start() {
-        if (currentTrack == null) return;
+        if (mCurrentTrack == null) return;
 
-        enqueueCues(); player.start();
+        enqueueCues(); mPlayer.start();
     }
 
     public synchronized void pause() {
-        if (currentTrack == null || !player.isPlaying()) return;
+        if (mCurrentTrack == null || !mPlayer.isPlaying()) return;
 
-        dequeueCues(); player.pause();
+        dequeueCues(); mPlayer.pause();
     }
 
     public synchronized void fade(final float from, final float to, final int duration, final Runnable callback) {
@@ -102,82 +104,86 @@ public class Deck implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompl
 
             @Override
             public void run() {
-                Deck.this.currentVolume += delta;
+                Deck.this.mCurrentVolume += delta;
 
-                if (player.isPlaying() && ((delta > 0 && currentVolume <= to) || (delta < 0 && currentVolume >= to))) {
-                    fader.postDelayed(this, 30);
+                if (mPlayer.isPlaying() && ((delta > 0 && mCurrentVolume <= to) || (delta < 0 && mCurrentVolume >= to))) {
+                    mFader.postDelayed(this, 30);
                 } else {
-                    fader.post(callback);
-                    Deck.this.currentVolume = to;
+                    mFader.post(callback);
+                    Deck.this.mCurrentVolume = to;
                 }
 
-                player.setVolume(currentVolume, currentVolume);
+                mPlayer.setVolume(mCurrentVolume, mCurrentVolume);
             }
         };
 
-        this.currentVolume = from;
+        mCurrentVolume = from;
 
-        fader.removeCallbacksAndMessages(null);
-        fader.post(faderIteration);
+        mFader.removeCallbacksAndMessages(null);
+        mFader.post(faderIteration);
     }
 
     public synchronized void fade(final float to, int duration, final Runnable callback) {
-        fade(currentVolume, to, duration, callback);
+        fade(mCurrentVolume, to, duration, callback);
     }
 
     public void setVolume(float volume) {
-        this.currentVolume = volume; player.setVolume(volume, volume);
+        mCurrentVolume = volume; mPlayer.setVolume(volume, volume);
     }
 
     public void setCue(Cue cue) {
-        cues.add(cue);
+        mCues.add(cue);
+    }
+
+    public boolean isEnding() {
+        return mPlayer.getDuration() - mPlayer.getCurrentPosition() < VALUE_ENDING_MARKER_SECONDS;
     }
 
     protected void enqueueCues() {
-        int position = player.getCurrentPosition();
-        int duration = player.getDuration();
+        int position = mPlayer.getCurrentPosition();
+        int duration = mPlayer.getDuration();
 
-        for (Cue cue : cues) {
-            timer.postDelayed(cue, cue.getDelay(position, duration));
+        for (Cue cue : mCues) {
+            mTimer.postDelayed(cue, cue.getDelay(position, duration));
         }
     }
 
     protected void dequeueCues() {
-        timer.removeCallbacksAndMessages(null);
+        mTimer.removeCallbacksAndMessages(null);
     }
 
     protected void prepare(Context context, AudioModel audio) {
-        this.currentTrack = audio;
+        mCurrentTrack = audio;
 
-        player.reset();
-        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        player.setVolume(currentVolume, currentVolume);
+        mPlayer.reset();
+        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mPlayer.setVolume(mCurrentVolume, mCurrentVolume);
 
         try {
-            player.setDataSource(audio.getSource(context));
-            player.prepareAsync();
+            mPlayer.setDataSource(audio.getSource(context));
+            mPlayer.prepareAsync();
 
-            currentEventListener.onNext(this, player, currentTrack);
+            mCurrentChangeListener.onQueue(this, mCurrentTrack);
         } catch (IOException exception) {
-            currentEventListener.onFailure(this, player, currentTrack, exception);
+            mCurrentChangeListener.onFailure(this, mCurrentTrack, exception);
         }
     }
 
     private void enqueue(List<? extends AudioModel> tracks) {
-        this.tracks.clear();
+        mTracks.clear();
 
         for (AudioModel track : tracks) {
-            if (track != null) this.tracks.add(track);
+            if (track != null) mTracks.add(track);
         }
     }
 
-    public interface OnProgressListener {
-        public void onReady(Deck deck, MediaPlayer player, AudioModel audio);
+    public interface OnChangeListener {
+        public void onReady(Deck deck, AudioModel audio);
 
-        public void onNext(Deck deck, MediaPlayer player, AudioModel audio);
+        public void onQueue(Deck deck, AudioModel audio);
 
-        public void onFailure(Deck deck, MediaPlayer player, AudioModel audio, IOException exception);
+        public void onEmpty(Deck deck);
 
-        public void onComplete(Deck deck, MediaPlayer player);
+        public void onFailure(Deck deck, AudioModel audio, IOException exception);
     }
 }

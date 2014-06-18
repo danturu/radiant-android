@@ -1,28 +1,30 @@
 package fm.radiant.android.lib.indexer;
 
 import android.content.Context;
-import android.util.SparseIntArray;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import fm.radiant.android.lib.ExtendedSparseIntArray;
 import fm.radiant.android.models.AudioModel;
+import fm.radiant.android.models.Period;
+import fm.radiant.android.models.Style;
 import fm.radiant.android.models.Track;
 
 public class TracksIndexer extends AbstractIndexer {
-    SparseIntArray mPersistedMinutes = new SparseIntArray();
+    private ExtendedSparseIntArray mPersistedMinutes = new ExtendedSparseIntArray();
+    private ExtendedSparseIntArray mTotalMinutes     = new ExtendedSparseIntArray();
+    private Set<Integer> mStyleIds = new HashSet<Integer>();
 
     public TracksIndexer(Context context, List<Track> queue) {
         super(context, queue);
-    }
 
-    @Override
-    public Class getModelClass() {
-        return Track.class;
-    }
-
-    @Override
-    public boolean isFrontQueue() {
-        return false;
+        for (Track track : queue) {
+            mStyleIds.add(track.getStyleId()); mTotalMinutes.inc(track.getStyleId(), track.getAudio().getTimeInSeconds());
+        }
     }
 
     @Override
@@ -41,13 +43,34 @@ public class TracksIndexer extends AbstractIndexer {
     }
 
     @Override
-    protected void onPersistentModel(AudioModel model) {
+    protected void onPersistedModel(AudioModel model) {
         Track track = (Track) model;
 
-        mPersistedMinutes.put(track.getStyleId(), mPersistedMinutes.get(track.getStyleId()) + track.getAudio().getTime() / 60000);
+        mPersistedMinutes.inc(track.getStyleId(), track.getAudio().getTimeInSeconds());
     }
 
-    public Integer getPersistedMinutes(Integer styleId) {
+    @Override
+    protected void onRemotedModel(AudioModel model) {
+        // no implementation necessary...
+    }
+
+    public List<Track> getBalancedRemotedQueue() {
+        List<Track> remotedQueue = getRemotedQueue();
+
+        Collections.shuffle(remotedQueue);
+
+        return remotedQueue;
+    }
+
+    public Integer getTotalMinutes(int styleId) {
+        return mTotalMinutes.get(styleId);
+    }
+
+    public Integer getPersistedMinutes(int styleId) {
         return mPersistedMinutes.get(styleId);
+    }
+
+    public Set<Integer> getStyleIds() {
+        return mStyleIds;
     }
 }

@@ -21,42 +21,46 @@ public class Events {
 
     public static class SyncerStateChanged {
         private int mState;
-        private int mError;
 
-        public SyncerStateChanged(int state, int error) {
+        public SyncerStateChanged(int state) {
             mState = state;
         }
 
         public int getState() {
             return mState;
         }
-
-        public int getError() {
-            return mError;
-        }
     }
 
-    public static class SyncerProgressChanged {
+    public static class SyncerSyncedPercentChanged {
         private byte mSyncedPercent;
-        private long mEstimatedTime;
-        private long mDownloadSpeed;
 
-        public SyncerProgressChanged(byte syncedPercent, long downloadSpeed, long estimatedTime) {
+        public SyncerSyncedPercentChanged(byte syncedPercent) {
             mSyncedPercent = syncedPercent;
-            mDownloadSpeed = downloadSpeed;
-            mEstimatedTime = estimatedTime;
         }
 
         public Byte getSyncedPercent() {
             return mSyncedPercent;
         }
+    }
 
+    public static class SyncerProgressChanged {
+        private long mEstimatedTime;
+        private long mDownloadSpeed;
+
+
+        public Long getEstimatedTime() {
+            return mEstimatedTime;
+        }
         public Long getDownloadSpeed() {
             return mDownloadSpeed;
         }
 
-        public Long getEstimatedTime() {
-            return mEstimatedTime;
+        public void setEstimatedTime(long estimatedTime) {
+            mEstimatedTime = estimatedTime;
+        }
+
+        public void setDownloadSpeed(long downloadSpeed) {
+            mDownloadSpeed = downloadSpeed;
         }
     }
 

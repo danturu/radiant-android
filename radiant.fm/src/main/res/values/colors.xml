@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
     <color name="white">#FFFFFF</color>
+    <color name="empty">#A7A7A7</color>
 
     <color name="state_red">#E5000F</color>
     <color name="state_green">#4CD864</color>
     <color name="state_blue">#157DFB</color>
-    <color name="state_yellow">#FFC700</color>
+    <color name="state_yellow">#e9b600</color>
 
     <item name="cover_1" type="color">#F6888D</item>
     <item name="cover_2" type="color">#C9E091</item>
@@ -21,5 +23,14 @@
         <item>@color/cover_4</item>
         <item>@color/cover_5</item>
         <item>@color/cover_6</item>
+    </integer-array>
+
+    <integer-array name="covers_fading">
+        <item>@drawable/player_cover_fade_1</item>
+        <item>@drawable/player_cover_fade_2</item>
+        <item>@drawable/player_cover_fade_3</item>
+        <item>@drawable/player_cover_fade_4</item>
+        <item>@drawable/player_cover_fade_5</item>
+        <item>@drawable/player_cover_fade_6</item>
     </integer-array>
 </resources>

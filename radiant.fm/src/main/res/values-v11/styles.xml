@@ -4,5 +4,6 @@
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:homeAsUpIndicator">@drawable/up_indicator</item>
         <item name="circleProgressBarStyle">@style/CircleProgressBar</item>
+        <item name="imageSquareButtonStyle">@style/ImageSquareButton</item>
     </style>
 </resources>

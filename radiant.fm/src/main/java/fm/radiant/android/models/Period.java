@@ -1,5 +1,7 @@
 package fm.radiant.android.models;
 
+import android.util.Log;
+
 import com.google.gson.annotations.Expose;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -30,9 +32,13 @@ public class Period extends Model {
     private Genre genre;
 
     public static Period findCurrent(List<Period> periods) {
-        Collections.sort(periods, new CurrentPeriodComparator());
+        if (periods.isEmpty()) {
+            return null;
+        } else {
+            Collections.sort(periods, new CurrentPeriodComparator());
 
-        return periods.get(0);
+            return periods.get(0);
+        }
     }
 
     public Integer getDay() {
@@ -69,7 +75,7 @@ public class Period extends Model {
     public long getDelay() {
         Interval interval = getInterval();
 
-        if (interval.isBeforeNow()) {
+        if (interval.getStart().isAfterNow()) {
             return interval.getStartMillis();
         } else {
             return interval.getEndMillis();

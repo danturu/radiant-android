@@ -1,12 +1,196 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f1f1f3"
+    android:fadingEdge="none"
+    android:fadingEdgeLength="0dp"
+    android:overScrollMode="never"
+    android:cacheColorHint="#ffffff"
+    android:paddingBottom="16dp">
 
-    <TextView
-        android:layout_width="282dp"
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Preeferf"
-        android:id="@+id/textView" />
-</LinearLayout>
+        android:background="#f1f1f3"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/text_header_sync"
+            android:layout_width="fill_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="25dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            android:text="МЕДИАТЕКА"
+            android:textColor="#7a7a7a"
+            android:textSize="15dp" />
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/preferences_section_shadow"
+            android:orientation="vertical"
+            android:paddingLeft="16dp">
+
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/preferences_shadow"
+                android:paddingBottom="10dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp">
+
+                <TextView
+                    android:id="@+id/header_sync_on"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:text="Интернет"
+                    android:textColor="#000000"
+                    android:textSize="16dp" />
+
+                <ToggleButton
+                    android:id="@+id/button_sync_on"
+                    android:layout_width="70dp"
+                    android:layout_height="40dp"
+                    android:layout_alignParentRight="true"
+                    android:background="@drawable/button_switch_background"
+                    android:textOff="@string/empty"
+                    android:textOn="@string/empty" />
+
+            </RelativeLayout>
+
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:paddingRight="16dp">
+
+                <TextView
+                    android:id="@+id/header_synced_percent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:text="Синхронизировано"
+                    android:textColor="#000000"
+                    android:textSize="16dp" />
+
+                <TextView
+                    android:id="@+id/value_synced_percent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/header_synced_percent"
+                    android:ellipsize="end"
+                    android:gravity="right"
+                    android:singleLine="true"
+                    android:text="Категория"
+                    android:textColor="#7a7a7a"
+                    android:textSize="16dp" />
+            </RelativeLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_header_info"
+            android:layout_width="fill_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="25dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            android:text="ИНФОРМАЦИЯ"
+            android:textColor="#7a7a7a"
+            android:textSize="15dp" />
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/preferences_section_shadow"
+            android:orientation="vertical"
+            android:paddingLeft="16dp">
+
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/preferences_shadow"
+                android:paddingRight="16dp">
+
+                <TextView
+                    android:id="@+id/header_place_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:text="Место"
+                    android:textColor="#000000"
+                    android:textSize="16dp" />
+
+                <TextView
+                    android:id="@+id/value_place_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/header_place_name"
+                    android:ellipsize="end"
+                    android:gravity="right"
+                    android:singleLine="true"
+                    android:text="Категория"
+                    android:textColor="#7a7a7a"
+                    android:textSize="16dp" />
+            </RelativeLayout>
+
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:paddingRight="16dp">
+
+                <TextView
+                    android:id="@+id/header_updated_at"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:text="Обновлено"
+                    android:textColor="#000000"
+                    android:textSize="16dp" />
+
+                <TextView
+                    android:id="@+id/value_updated_at"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/header_updated_at"
+                    android:ellipsize="end"
+                    android:gravity="right"
+                    android:singleLine="true"
+                    android:text="Категория Категория Категория  Категория Категория "
+                    android:textColor="#7a7a7a"
+                    android:textSize="16dp" />
+
+            </RelativeLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_logout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="25dp"
+            android:background="@drawable/button_logout_background"
+            android:text="Отвязать это устройства"
+            android:textColor="#ffffff" />
+
+    </LinearLayout>
+</ScrollView>

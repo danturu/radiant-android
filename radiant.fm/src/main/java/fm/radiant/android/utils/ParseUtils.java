@@ -1,5 +1,6 @@
 package fm.radiant.android.utils;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.FieldNamingPolicy;
@@ -15,6 +16,8 @@ import org.joda.time.format.DateTimeFormat;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ParseUtils {
     private static final Gson parser = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
@@ -39,16 +42,21 @@ public class ParseUtils {
         return parser.toJson(object);
     }
 
-    public static String humanizeDay(Integer day) {
+    public static String humanizeDay(Integer day, boolean shortened) {
         DateTime time = new DateTime().withDayOfWeek(day + 1);
-        return WordUtils.capitalize((DateTimeFormat.forPattern("EEEE").print(time)));
+
+        if (shortened) {
+            return DateTimeFormat.forPattern("E").print(time);
+        } else {
+            return DateTimeFormat.forPattern("EEEE").print(time);
+        }
     }
 
     public static String humanizeTime(int time) {
         String hours   = Integer.toString(time / 60);
         String minutes = Integer.toString(time % 60);
 
-        return StringUtils.leftPad(hours, 2, '0') + ':' + StringUtils.rightPad(minutes, 2, '0');
+        return StringUtils.leftPad(hours, 2, '0') + ':' + StringUtils.leftPad(minutes, 2, '0');
     }
 
     public static String humanizeTimeRange(int startTime, int endTime) {
@@ -56,7 +64,7 @@ public class ParseUtils {
     }
 
     public static String humanizeDuration(long seconds) {
-        if (seconds < 0) return "N/A";
+        if (seconds < 0 || seconds == Long.MAX_VALUE) return "N/A";
 
         if (seconds > 3660) {
             return (seconds / 3600) + " " + sTimeUnits[2] + " " + (seconds % 3600 / 60) + " " + sTimeUnits[1];
@@ -71,6 +79,21 @@ public class ParseUtils {
         }
 
         return seconds + " " + sTimeUnits[0];
+    }
+
+    public static String humanizeDurationDigit(int seconds) {
+        if (seconds < 0) seconds = 0;
+
+        String time = "";
+
+        if (seconds > 3600) {
+            time = StringUtils.leftPad(Integer.toString(seconds / 3600), 2, '0') + ":";
+        }
+
+        time += StringUtils.leftPad(Integer.toString((seconds % 3600) / 60), 2, '0') + ":";
+        time += StringUtils.leftPad(Integer.toString((seconds % 3600) % 60), 2, '0');
+
+        return time;
     }
 
     public static String humanizeSpeed(long bytes) {

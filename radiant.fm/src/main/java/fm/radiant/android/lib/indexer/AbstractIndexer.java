@@ -13,9 +13,9 @@ import fm.radiant.android.models.AudioModel;
 public abstract class AbstractIndexer {
     private Context mContext;
 
-    private List<? extends AudioModel> mQueue;
-    private List<AudioModel> mPersistedQueue = new ArrayList<AudioModel>();
-    private List<AudioModel> mRemotedQueue   = new ArrayList<AudioModel>();
+    private List<? extends AudioModel> mQueue = new ArrayList<AudioModel>();
+    private List<AudioModel> mPersistedQueue  = new ArrayList<AudioModel>();
+    private List<AudioModel> mRemotedQueue    = new ArrayList<AudioModel>();
 
     private MutableLong mPersistedBytes = new MutableLong();
     private MutableLong mRemotedBytes   = new MutableLong();
@@ -28,10 +28,6 @@ public abstract class AbstractIndexer {
         mQueue   = queue;
     }
 
-    public abstract Class getModelClass();
-
-    public abstract boolean isFrontQueue();
-
     public synchronized void index() {
         if (mIndexed) return;
 
@@ -39,9 +35,10 @@ public abstract class AbstractIndexer {
             try {
                 if (isAudioExists(model)) {
                     addToQueue(mPersistedQueue, mPersistedBytes, model);
-                    onPersistentModel(model);
+                    onPersistedModel(model);
                 } else {
                     addToQueue(mRemotedQueue, mRemotedBytes, model);
+                    onRemotedModel(model);
                 }
             } catch (IOException ignored) {
                 addToQueue(mRemotedQueue, mRemotedBytes, model);
@@ -60,7 +57,7 @@ public abstract class AbstractIndexer {
         mPersistedQueue.add(model);
         mPersistedBytes.add(filesize);
 
-        onPersistentModel(model);
+        onPersistedModel(model);
     }
 
     public List<? extends AudioModel> getPersistedQueue() {
@@ -99,14 +96,16 @@ public abstract class AbstractIndexer {
         return mTotalBytes.longValue();
     }
 
-    protected abstract void onPersistentModel(AudioModel model);
+    protected abstract void onPersistedModel(AudioModel model);
+
+    protected abstract void onRemotedModel(AudioModel model);
 
     protected void addToQueue(List<AudioModel> queue, MutableLong queueBytes, AudioModel model) {
         int filesize = model.getAudio().getSize();
 
         queue.add(model);
-
         queueBytes.add(filesize);
+
         mTotalBytes.add(filesize);
     }
 

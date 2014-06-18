@@ -1,21 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">radiant.fm</string>
+    <string name="empty"></string>
 
-    <string name="title_scheduler">Расписание</string>
+    <string name="title_periods">Расписание</string>
+    <string name="title_campaigns">Реклама</string>
     <string name="title_preferences">Настройки</string>
 
     <string name="button_ok">OK</string>
     <string name="button_cancel">Отмена</string>
-    <string name="button_repair">Перепривязать</string>
+    <string name="button_repair">Использовать</string>
     <string name="button_signin">Войти</string>
     <string name="button_signup">Зарегистрироваться</string>
+    <string name="button_turn_on">Включить</string>
+    <string name="button_turn_off">Выключить</string>
 
     <string name="placeholder_password">Пароль</string>
 
-    <string name="message_please_wait">Подождите</string>
-    <string name="message_already_paired">message_pairing_forbidden</string>
-    <string name="message_wrong_password">message_wrong_password</string>
-    <string name="message_server_fault">message_server_error</string>
-    <string name="message_network_error">message_network_error</string>
+    <string name="message_please_wait">Подождите...</string>
+    <string name="message_already_paired">Этот пароль используется на другом устройстве. Нажмите «Использовать», чтобы использовать его сейчас (работа приложения radiant.fm на другом устройстве будет остановлено).</string>
+    <string name="message_wrong_password">Неверный пароль. Проверьте и повторите попытку.</string>
+    <string name="message_server_fault">Произошла неизвестная ошибка. Повторите попытку.</string>
+    <string name="message_network_error">Отсутствует подключение к интернету. Подключитесь и повторите попытку.</string>
+    <string name="message_empty_schedule">Похоже, что вы еще не выбрали музыку.</string>
+    <string name="message_turn_on_sync_to_play">Вкл синк.</string>
+    <string name="message_turn_off_will_stop_music">Выключение синзронизации остановить музыку.</string>
+    <string name="message_syncer_state_synced">Музыка обновлена. Все работает.</string>
+    <string name="message_syncer_state_indexing">Подготвка к обновлению. Все работает.</string>
+    <string name="message_syncer_state_idle_no_internet">Отсутствует подключение к интернету.</string>
+    <string name="message_syncer_state_failed_no_space">Обновлена невозможно. Нет места на карте.</string>
+    <string name="message_syncer_state_failed_no_storage">Обновлена невозможно. SD-карта не установленна.</string>
+    <string name="message_syncer_state_stopped">Синхронизация выключена.</string>
+    <string name="message_player_will_stream">Плеер будет стримить.</string>
+    <string name="message_player_no_internet">Нет интернета для стриминга.</string>
+    <string name="message_empty_periods_list">НЕТ РЕКЛАМНЫХ АУДИОРОЛИКОВ</string>
+
 </resources>

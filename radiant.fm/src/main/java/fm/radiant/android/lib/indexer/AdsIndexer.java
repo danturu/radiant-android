@@ -13,16 +13,6 @@ public class AdsIndexer extends AbstractIndexer {
     }
 
     @Override
-    public Class getModelClass() {
-        return Ad.class;
-    }
-
-    @Override
-    public boolean isFrontQueue() {
-        return true;
-    }
-
-    @Override
     public List<Ad> getPersistedQueue() {
         return (List<Ad>) super.getPersistedQueue();
     }
@@ -33,7 +23,12 @@ public class AdsIndexer extends AbstractIndexer {
     }
 
     @Override
-    protected void onPersistentModel(AudioModel model) {
+    protected void onPersistedModel(AudioModel model) {
+        // no implementation necessary...
+    }
+
+    @Override
+    protected void onRemotedModel(AudioModel model) {
         // no implementation necessary...
     }
 }

@@ -30,8 +30,6 @@ import static android.view.KeyEvent.KEYCODE_VOLUME_DOWN;
 import static android.view.KeyEvent.KEYCODE_VOLUME_UP;
 
 public class MainActivity extends EventBusActivity {
-    private Fragment mCurrentFragment;
-
     public static int getContentViewCompat() {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH ? R.id.action_bar_activity_content : android.R.id.content;
     }
@@ -45,13 +43,12 @@ public class MainActivity extends EventBusActivity {
         }
 
         getSupportActionBar().setDisplayShowHomeEnabled(false);
+        openPlayerFragment();
 
         if (MessagesUtils.canReceiveMessages(this)) {
             new SubscribeTask().execute();
             new SyncTask().execute();
         }
-
-        openPlayerFragment();
     }
 
     @Override
@@ -63,17 +60,8 @@ public class MainActivity extends EventBusActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        //if (mCurrentFragment != null)  ((NavigateUpEventListener) mCurrentFragment).onNavigateUp();
         getSupportFragmentManager().popBackStack();
-
         return true;
-    }
-
-    @Override
-    public void onAttachFragment(Fragment fragment) {
-        super.onAttachFragment(fragment);
-
-        mCurrentFragment = fragment;
     }
 
     @Override
@@ -95,7 +83,7 @@ public class MainActivity extends EventBusActivity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        Fragment fragment = getSupportFragmentManager().findFragmentByTag("player");
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(PlayerFragment.TAG);
 
         if (fragment != null && fragment.isVisible()) switch (keyCode) {
             case KEYCODE_VOLUME_UP:
@@ -108,42 +96,45 @@ public class MainActivity extends EventBusActivity {
         return super.onKeyUp(keyCode, event);
     }
 
-    public void onEvent(Events.PlaceChangedEvent event) {
-        final Place place = event.getPlace();
+    public void onEvent(final Events.PlaceChangedEvent event) {
+        if (!AccountUtils.isLoggedIn()) return;
 
-        new CleanTask().execute(new TracksCleaner(this, place.getTracks()), new AdsCleaner(this, place.getAds()));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final Place place = event.getPlace();
 
-        // indexers
+                // indexers
 
-        TracksIndexer tracksIndexer = new TracksIndexer(this, place.getTracks());
-        AdsIndexer    adsIndexer    = new AdsIndexer(this, place.getAds());
+                TracksIndexer tracksIndexer = new TracksIndexer(getApplicationContext(), place.getTracks());
+                AdsIndexer    adsIndexer    = new AdsIndexer(getApplicationContext(), place.getAds());
 
-        // syncer
+                // syncer
 
-        final Syncer syncer = LibraryUtils.getSyncer();
-        syncer.setIndexers(tracksIndexer, adsIndexer);
+                final Syncer syncer = LibraryUtils.getSyncer();
+                syncer.setIndexers(tracksIndexer, adsIndexer);
 
-        if (syncer.getState() != Syncer.STATE_STOPPED) {
-            Intent service = new Intent(getApplicationContext(), DownloadService.class);
-            stopService(service);
-            startService(service);
-        } else {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
+                if (syncer.getState() != Syncer.STATE_STOPPED) {
+                    Intent service = new Intent(getApplicationContext(), DownloadService.class);
+                    stopService(service); startService(service);
+                } else {
                     syncer.touch();
                 }
-            }).start();
-        }
 
-        // player
+                // player
 
-        final Player player = LibraryUtils.getPlayer();
-        player.setAdsIndexer(adsIndexer);
-        player.setTracksIndexer(tracksIndexer);
-        player.setPeriods(place.getPeriods());
-        player.setCampaigns(place.getCampaigns());
-        player.schedule();
+                final Player player = LibraryUtils.getPlayer();
+                player.setIndexers(tracksIndexer, adsIndexer);
+                player.setPeriods(place.getPeriods());
+                player.setCampaigns(place.getCampaigns());
+                player.setSyncer(syncer);
+                player.schedule();
+
+                // cleaner
+
+                new CleanTask().execute(new TracksCleaner(getApplicationContext(), place.getTracks()), new AdsCleaner(getApplicationContext(), place.getAds()));
+            }
+        }).start();
     }
 
     public void onEvent(Events.PlaceUnpairedEvent event) {

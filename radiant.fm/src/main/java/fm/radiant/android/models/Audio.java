@@ -31,11 +31,17 @@ public class Audio {
         return hash;
     }
 
-    public int getTime() {
+    public Integer getTime() {
         return time;
     }
 
-    public int getSize() {
+    public Integer getTimeInSeconds() {
+        return getTime() / 60000;
+    }
+
+    public Integer getSize() {
         return size;
     }
+
+
 }

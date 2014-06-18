@@ -9,5 +9,11 @@
         <attr name="progress_foregroundColor" format="color" />
     </declare-styleable>
 
+    <declare-styleable name="ImageSquareButton">
+        <attr name="drawableCenter" format="integer" />
+    </declare-styleable>
+
     <attr name="circleProgressBarStyle" format="reference" />
+    <attr name="imageSquareButtonStyle" format="reference" />
+
 </resources>

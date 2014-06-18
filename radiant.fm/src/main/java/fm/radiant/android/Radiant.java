@@ -1,6 +1,7 @@
 package fm.radiant.android;
 
 import android.app.Application;
+import android.content.Context;
 import android.text.Spannable;
 import android.text.SpannableString;
 
@@ -26,11 +27,17 @@ public class Radiant extends Application {
     public void onCreate() {
         super.onCreate();
 
-        TypefaceCache.initialize(this);
-        AccountUtils.initialize(this);
-        CommonUtils.initialize(this);
-        LibraryUtils.initialize(this);
-        MessagesUtils.initialize(this);
-        NetworkUtils.initialize(this);
+        attachContextToUtils();
+    }
+
+    private void attachContextToUtils() {
+        Context context = getApplicationContext();
+
+        TypefaceCache.initialize(context);
+        AccountUtils.initialize(context);
+        CommonUtils.initialize(context);
+        LibraryUtils.initialize(context);
+        MessagesUtils.initialize(context);
+        NetworkUtils.initialize(context);
     }
 }

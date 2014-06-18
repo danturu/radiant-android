@@ -26,7 +26,6 @@ public class CircleProgressBar extends TextView {
 
     private int mProgressBackgroundColor;
     private int mProgressForegroundColor;
-
     private int mProgressBackgroundWidth;
     private int mProgressForegroundWidth;
 

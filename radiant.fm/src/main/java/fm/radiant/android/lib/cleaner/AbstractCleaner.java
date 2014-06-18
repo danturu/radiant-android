@@ -20,14 +20,18 @@ public abstract class AbstractCleaner {
     private File mDirectory;
 
     public AbstractCleaner(List<? extends AudioModel> queue, File directory) {
-        this.mQueue     = queue;
-        this.mDirectory = directory;
+        mQueue     = queue;
+        mDirectory = directory;
     }
 
     public void clean() {
         if (!mDirectory.isDirectory()) return;
 
-        for (File expiredFile : getExpiredFiles()) { FileUtils.deleteQuietly(expiredFile); }
+        if (mQueue.isEmpty()) {
+            FileUtils.deleteQuietly(mDirectory);
+        } else {
+            for (File expiredFile : getExpiredFiles()) { FileUtils.deleteQuietly(expiredFile); }
+        }
     }
 
     protected Collection<File> getExpiredFiles() {

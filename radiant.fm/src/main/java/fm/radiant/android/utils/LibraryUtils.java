@@ -19,8 +19,8 @@ public class LibraryUtils {
     }
 
     public static void teardown() {
-        sPlayer.stop();
-        sSyncer.stop();
+        sPlayer.reset();
+        sSyncer.reset();
     }
 
     public static Syncer getSyncer() {
