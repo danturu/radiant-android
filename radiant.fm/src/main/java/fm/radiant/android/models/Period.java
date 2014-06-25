@@ -1,7 +1,5 @@
 package fm.radiant.android.models;
 
-import android.util.Log;
-
 import com.google.gson.annotations.Expose;
 
 import org.apache.commons.lang.ObjectUtils;

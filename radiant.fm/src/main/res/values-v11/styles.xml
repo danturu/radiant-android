@@ -6,4 +6,9 @@
         <item name="circleProgressBarStyle">@style/CircleProgressBar</item>
         <item name="imageSquareButtonStyle">@style/ImageSquareButton</item>
     </style>
+
+    <style name="CustomThemeNoActionBar" parent="CustomTheme">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
 </resources>

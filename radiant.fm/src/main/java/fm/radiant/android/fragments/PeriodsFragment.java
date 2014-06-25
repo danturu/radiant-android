@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -23,6 +24,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.apache.commons.lang.WordUtils;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,7 +36,6 @@ import java.util.Map;
 import fm.radiant.android.Events;
 import fm.radiant.android.R;
 import fm.radiant.android.Radiant;
-import fm.radiant.android.MainActivity;
 import fm.radiant.android.lib.EventBusFragment;
 import fm.radiant.android.lib.TypefaceCache;
 import fm.radiant.android.lib.TypefaceSpan;
@@ -60,8 +62,10 @@ public class PeriodsFragment extends EventBusFragment {
         mPeriodsView = (ListView) view.findViewById(R.id.periods);
         mPeriodsView.setAdapter(mPeriodsAdapter);
 
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(Radiant.formatHeader(getString(R.string.title_periods)));
+        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        actionBar.show();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(Radiant.formatHeader(getString(R.string.title_periods)));
 
         return view;
     }
@@ -84,7 +88,7 @@ public class PeriodsFragment extends EventBusFragment {
     private void openCampaignsFragment() {
         FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
-        transaction.replace(MainActivity.getContentViewCompat(), new CampaignsFragment(), CampaignsFragment.TAG);
+        transaction.replace(android.R.id.content, new CampaignsFragment(), CampaignsFragment.TAG);
         transaction.addToBackStack(PeriodsFragment.TAG);
         transaction.commit();
     }
@@ -92,7 +96,7 @@ public class PeriodsFragment extends EventBusFragment {
     private void openPreferencesFragment() {
         FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
-        transaction.replace(MainActivity.getContentViewCompat(), new PreferencesFragment(), PreferencesFragment.TAG);
+        transaction.replace(android.R.id.content, new PreferencesFragment(), PreferencesFragment.TAG);
         transaction.addToBackStack(PeriodsFragment.TAG);
         transaction.commit();
     }
@@ -215,7 +219,7 @@ public class PeriodsFragment extends EventBusFragment {
             TextView dayNameView = (TextView) view.findViewById(R.id.text_day_name);
 
             dayNameView.setTypeface(TypefaceCache.get(TypefaceCache.FONT_MUSEO_500));
-            dayNameView.setText(ParseUtils.humanizeDay((Integer) getItem(position), false));
+            dayNameView.setText(WordUtils.capitalizeFully(ParseUtils.humanizeDay((Integer) getItem(position), false)));
 
             return view;
         }

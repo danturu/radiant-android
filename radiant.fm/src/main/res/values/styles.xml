@@ -7,6 +7,11 @@
         <item name="imageSquareButtonStyle">@style/ImageSquareButton</item>
     </style>
 
+    <style name="CustomThemeNoActionBar" parent="CustomTheme">
+        <item name="windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
     <style name="ActionBar" parent="@style/Widget.AppCompat.ActionBar">
         <item name="android:background">@color/white</item>
         <item name="background">@color/white</item>

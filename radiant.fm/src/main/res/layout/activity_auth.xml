@@ -41,7 +41,8 @@
                 android:hint="@string/placeholder_password"
                 android:textColorHint="#80000000"
                 android:inputType="textPassword|textCapCharacters"
-                android:textSize="19dp" />
+                android:textSize="19dp"
+                android:text="B2513BE4"/>
         </FrameLayout>
 
         <FrameLayout
@@ -65,7 +66,6 @@
             android:layout_height="30dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/auth_button_signup"
-            android:text="@string/button_signup"
             android:textSize="17dp" />
 
     </LinearLayout>

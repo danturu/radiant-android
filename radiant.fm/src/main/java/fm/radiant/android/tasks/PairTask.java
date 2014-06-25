@@ -12,8 +12,8 @@ import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import java.io.IOException;
 
-import fm.radiant.android.R;
 import fm.radiant.android.MainActivity;
+import fm.radiant.android.R;
 import fm.radiant.android.utils.AccountUtils;
 
 public class PairTask extends AsyncTask<Void, Void, Integer> implements DialogInterface.OnClickListener {

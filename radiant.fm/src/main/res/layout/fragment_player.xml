@@ -144,7 +144,7 @@
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:textColor="#ffffff"
-                        android:textSize="37dp" />
+                        android:textSize="37dp"/>
 
                     <fm.radiant.android.lib.widgets.AutoScrollTextView
                         android:id="@+id/text_period_description"
@@ -152,7 +152,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:textColor="#80000000"
-                        android:textSize="18dp" />
+                        android:textSize="18dp"/>
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
@@ -219,7 +219,7 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="2"
             android:gravity="center_horizontal"
-            android:textSize="16dp" />
+            android:textSize="18dp" />
     </LinearLayout>
 
 </RelativeLayout>

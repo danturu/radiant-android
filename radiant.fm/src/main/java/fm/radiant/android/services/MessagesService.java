@@ -8,12 +8,13 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import java.io.IOException;
+
 import de.greenrobot.event.EventBus;
 import fm.radiant.android.Events;
 import fm.radiant.android.lib.syncer.Syncer;
 import fm.radiant.android.receivers.MessagesReceiver;
 import fm.radiant.android.tasks.SyncTask;
-import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.MessagesUtils;
 
 public class MessagesService extends IntentService {
@@ -34,21 +35,35 @@ public class MessagesService extends IntentService {
             Bundle extras      = intent.getExtras();
             String messageType = MessagesUtils.getMessageType(intent);
 
+            Log.d(TAG, "Push message!");
+
+            if (!MessagesUtils.isRegistered()) {
+                Log.i(TAG, "Push message received, but app should be unregistered");
+
+                try {
+                    MessagesUtils.unregister();
+                } catch (IOException e) {
+                    Log.e(TAG, "Could not be unregistered", e);
+                }
+
+                return;
+            }
+
             if (!GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
                 return;
             }
 
-            Log.d(TAG, "Message received");
-
             String action = extras.getString(PROPERTY_ACTION);
 
-            if (ACTION_RESYNC.equals(action) && LibraryUtils.getSyncer().getState() != Syncer.STATE_STOPPED) {
+            Log.i(TAG, "Push message received: " + action);
+
+            if (ACTION_RESYNC.equals(action) && Syncer.getInstance().getState() != Syncer.STATE_STOPPED) {
                 new SyncTask().execute();
                 return;
             }
 
             if (ACTION_UNPAIR.equals(action)) {
-                EventBus.getDefault().post(new Events.PlaceUnpairedEvent());
+                EventBus.getDefault().postSticky(new Events.PlaceUnpairedEvent());
                 return;
             }
         } finally {

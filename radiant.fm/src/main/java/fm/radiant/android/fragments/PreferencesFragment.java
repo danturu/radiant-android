@@ -5,22 +5,18 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.ListView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
-
-import java.util.List;
 
 import fm.radiant.android.Events;
 import fm.radiant.android.R;
@@ -29,16 +25,16 @@ import fm.radiant.android.lib.EventBusFragment;
 import fm.radiant.android.lib.TypefaceCache;
 import fm.radiant.android.lib.player.Player;
 import fm.radiant.android.lib.syncer.Syncer;
-import fm.radiant.android.models.Period;
 import fm.radiant.android.services.DownloadService;
 import fm.radiant.android.tasks.SyncTask;
 import fm.radiant.android.tasks.UnpairTask;
 import fm.radiant.android.utils.AccountUtils;
-import fm.radiant.android.utils.LibraryUtils;
-import fm.radiant.android.utils.ParseUtils;
 
 public class PreferencesFragment extends EventBusFragment implements View.OnClickListener {
     public static String TAG = PreferencesFragment.class.getSimpleName();
+
+    private Player mPlayer = Player.getInstance();
+    private Syncer mSyncer = Syncer.getInstance();
 
     private TextView mSyncHeader;
     private TextView mInfoHeader;
@@ -69,8 +65,10 @@ public class PreferencesFragment extends EventBusFragment implements View.OnClic
 
         setHasOptionsMenu(false);
 
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(Radiant.formatHeader(getString(R.string.title_preferences)));
+        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        actionBar.show();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(Radiant.formatHeader(getString(R.string.title_preferences)));
 
         Typeface museo500 = TypefaceCache.get(TypefaceCache.FONT_MUSEO_500);
 
@@ -83,21 +81,17 @@ public class PreferencesFragment extends EventBusFragment implements View.OnClic
         mHeaderSyncOn.setTypeface(museo500);
 
         mSwitchSyncOn = (ToggleButton) view.findViewById(R.id.button_sync_on);
-        mSwitchSyncOn.setChecked(LibraryUtils.getSyncer().getState() != Syncer.STATE_STOPPED);
+        mSwitchSyncOn.setChecked(mSyncer.getState() != Syncer.STATE_STOPPED);
         mSwitchSyncOn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(final CompoundButton compoundButton, boolean checked) {
-                final Player player = LibraryUtils.getPlayer();
-                final Syncer syncer = LibraryUtils.getSyncer();
-                final Intent service = new Intent(getActivity(), DownloadService.class);
-
-                if (checked == false && syncer.getState() == Syncer.STATE_STOPPED) return;
+                if (checked == false && mSyncer.getState() == Syncer.STATE_STOPPED) return;
 
                 if (checked) {
                     new SyncTask().execute();
-                    getActivity().stopService(service); getActivity().startService(service);
+                    mSyncer.startService();
                 } else {
-                    if (player.getState() != Player.STATE_STOPPED && !player.isMusicEnough()) {
+                    if (mPlayer.getState() != Player.STATE_STOPPED && !mPlayer.isMusicEnough()) {
                         compoundButton.toggle();
 
                         AlertDialog.Builder errorDialog = new AlertDialog.Builder(getActivity());
@@ -105,8 +99,8 @@ public class PreferencesFragment extends EventBusFragment implements View.OnClic
                         errorDialog.setPositiveButton(R.string.button_turn_off, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                syncer.stop();
-                                player.stop();
+                                mSyncer.stopService();
+                                mPlayer.stop();
 
                                 compoundButton.setChecked(false);
                             }
@@ -114,7 +108,7 @@ public class PreferencesFragment extends EventBusFragment implements View.OnClic
                         errorDialog.setNegativeButton(R.string.button_cancel, null);
                         errorDialog.show();
                     } else {
-                        LibraryUtils.getSyncer().stop();
+                        mSyncer.stopService();
                     }
                 }
             }
@@ -172,11 +166,11 @@ public class PreferencesFragment extends EventBusFragment implements View.OnClic
 
     private void logout() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
-        alertDialog.setMessage(R.string.message_turn_on_sync_to_play);
+        alertDialog.setMessage(R.string.message_unpair_will_destroy_data);
         alertDialog.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                new UnpairTask(getActivity(), AccountUtils.getPassword()).execute();
+                new UnpairTask(getActivity(), AccountUtils.getPassword(), true).execute();
             }
         });
         alertDialog.setNegativeButton(R.string.button_cancel, null);

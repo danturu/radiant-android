@@ -1,6 +1,8 @@
 package fm.radiant.android.lib.syncer;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.common.util.concurrent.RateLimiter;
@@ -12,23 +14,28 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Stack;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import de.greenrobot.event.EventBus;
 import fm.radiant.android.Events;
+import fm.radiant.android.Radiant;
 import fm.radiant.android.lib.indexer.AdsIndexer;
 import fm.radiant.android.lib.indexer.TracksIndexer;
 import fm.radiant.android.models.Ad;
 import fm.radiant.android.models.AudioModel;
 import fm.radiant.android.models.Track;
+import fm.radiant.android.services.DownloadService;
 import fm.radiant.android.utils.NetworkUtils;
 import fm.radiant.android.utils.StorageUtils;
 
-public class Syncer implements Download.OnProgressListener {
+public class Syncer implements AbstractDownload.OnProgressListener {
     public static final String TAG = Syncer.class.getSimpleName();
 
-    public static final byte STATE_NULL              = 0x0;
+    public static final byte STATE_PREPARING         = 0x0;
     public static final byte STATE_SYNCED            = 0x1;
     public static final byte STATE_SYNCING           = 0x2;
     public static final byte STATE_INDEXING          = 0x3;
@@ -37,52 +44,95 @@ public class Syncer implements Download.OnProgressListener {
     public static final byte STATE_FAILED_NO_STORAGE = 0x6;
     public static final byte STATE_STOPPED           = 0x7;
 
+    private static volatile Syncer instance;
     private final Context mContext;
 
-    private TracksIndexer mTracksIndexer; private AdsIndexer mAdsIndexer;
+    private volatile TracksIndexer mTracksIndexer;
+    private volatile AdsIndexer mAdsIndexer;
 
-    private List<Download> mDownloads = new CopyOnWriteArrayList<Download>();
-    private Download mCurrentDownload;
+    private Stack<AbstractDownload> mDownloads = new Stack<AbstractDownload>();
+    private AbstractDownload mCurrentDownload;
 
-    private byte mCurrentState  = STATE_NULL;
+    private byte mCurrentState  = STATE_PREPARING;
     private byte mSyncedPercent = 0;
     private long mEstimatedTime = 0;
     private long mDownloadSpeed = 0;
     private long mReceivedBytes = 0;
 
     private List<Integer> mSpeedSamples = new ArrayList<Integer>(Arrays.asList(0, 0, 0, 0, 0));
-    private RateLimiter   mTrackLimiter = RateLimiter.create(1.0);
+    private RateLimiter mTrackLimiter   = RateLimiter.create(1.0);
 
-    public Syncer(Context context) {
+    private Handler mBackoff = new Handler();
+    private boolean mResync = false;
+    private final Lock mLock = new ReentrantLock();
+
+    public static Syncer getInstance() {
+        Syncer localInstance = instance;
+
+        if (localInstance == null) {
+            synchronized (Syncer.class) {
+                localInstance = instance;
+
+                if (localInstance == null) {
+                    instance = localInstance = new Syncer(Radiant.getContext());
+                }
+            }
+        }
+
+        return localInstance;
+    }
+
+    private Syncer(Context context) {
         mContext = context;
     }
 
+    public void startService() {
+        stopService(STATE_PREPARING);
+
+        Intent service = new Intent(mContext, DownloadService.class);
+        mContext.startService(service);
+    }
+
+    public void stopService(byte state) {
+        Intent service = new Intent(mContext, DownloadService.class);
+        mContext.stopService(service);
+
+        stop(state);
+    }
+
+    public void stopService() {
+        stopService(STATE_STOPPED);
+    }
+
     public void start() {
-        try {
-            index();
-            fetch();
+        synchronized (mLock) {
+            try {
+                FileUtils.deleteQuietly(mContext.getExternalCacheDir());
 
-            measureProgress(); stop(STATE_SYNCED);
-        } catch (IOException exception) {
-            Log.e(TAG, "An exception has occurred: ", exception);
+                index();
+                fetch();
+
+                measureProgress(); measurePercent(); stop(STATE_SYNCED);
+
+                if (mResync) resync();
+            } catch (IOException exception) {
+                Log.e(TAG, "An exception has occurred: ", exception);
+            }
         }
     }
 
-    public void touch() {
-        try {
-            index();
-            check();
+    public void stop(final byte state) {
+        if (mLock.tryLock()) {
+             try {
+                 setState(state);
 
-            measureProgress(); stop(STATE_STOPPED);
-        } catch (IOException exception) {
-            Log.e(TAG, "An exception has occurred: ", exception);
+                 mBackoff.removeCallbacksAndMessages(null);
+
+                 if (mCurrentDownload != null) mCurrentDownload.abort();
+             } finally {
+                 mLock.unlock();
+             }
         }
-    }
-
-    public void stop(byte state) {
-        setState(state);
-
-        if (mCurrentDownload != null) mCurrentDownload.abort();
     }
 
     public void stop() {
@@ -90,24 +140,26 @@ public class Syncer implements Download.OnProgressListener {
     }
 
     public void reset() {
-        stop(STATE_NULL);
+        stop(STATE_PREPARING);
 
-        mTracksIndexer   = null;
-        mAdsIndexer      = null;
-        mCurrentDownload = null;
+        synchronized (mLock) {
+            mTracksIndexer = null;
+            mAdsIndexer = null;
+            mCurrentDownload = null;
 
-        mDownloads.clear();
+            mDownloads.clear();
 
-        try {
-            FileUtils.deleteDirectory(new Track().getDirectory(mContext));
-        } catch (IOException e) {
-            Log.e(TAG, "Could not clean tracks cache.", e);
-        }
+            try {
+                FileUtils.deleteDirectory(new Track().getDirectory(mContext));
+            } catch (IOException e) {
+                Log.e(TAG, "Could not clean tracks cache.", e);
+            }
 
-        try {
-            FileUtils.deleteDirectory(new Ad().getDirectory(mContext));
-        } catch (IOException e) {
-            Log.e(TAG, "Could not clean ads cache.", e);
+            try {
+                FileUtils.deleteDirectory(new Ad().getDirectory(mContext));
+            } catch (IOException e) {
+                Log.e(TAG, "Could not clean ads cache.", e);
+            }
         }
     }
 
@@ -128,74 +180,95 @@ public class Syncer implements Download.OnProgressListener {
     }
 
     @Override
-    public void onSuccess(Download download, final AudioModel model, File file) {
-        if (model instanceof Track) { mTracksIndexer.moveToPersisted(model); } else { mAdsIndexer.moveToPersisted(model); }
-
-        EventBus.getDefault().postSticky(new Events.SyncerSyncedPercentChanged(mSyncedPercent = calculateSyncedPercent()));
+    public void onDownloadSuccess(AbstractDownload download, AudioModel model, File tempFile) {
+        // no implementation necessary...
     }
 
     @Override
-    public void onFailure(Download download, AudioModel model, final IOException e) {
-        Log.e(TAG, "Could not download audio(id=" + model.getStringId() + "): ", e);
+    public void onDownloadFailure(AbstractDownload download, AudioModel model, IOException e) {
+        mResync = true;
     }
 
     @Override
-    public void onComplete(Download download, AudioModel model) {
-        mReceivedBytes = 0;
+    public void onCheckSuccess(AbstractDownload download, AudioModel model, File tempFile) {
+        // no implementation necessary...
     }
 
-    private final Events.SyncerProgressChanged syncerProgressChanged = new Events.SyncerProgressChanged();
+    @Override
+    public void onCheckFailure(AbstractDownload download, AudioModel model, IOException exception) {
+        mResync = true;
+    }
 
     @Override
-    public void onProgress(Download download, AudioModel model, int receivedBytes, int totalBytes) {
+    public void onStoreSuccess(AbstractDownload download, AudioModel model, File file) {
+        if (model instanceof Track) {
+            mTracksIndexer.moveToPersisted(model);
+        } else {
+            mAdsIndexer.moveToPersisted(model);
+        }
+
+        measurePercent();
+    }
+
+    @Override
+    public void onStoreFailure(AbstractDownload download, AudioModel model, IOException exception) {
+        mResync = true;
+    }
+
+    @Override
+    public void onDownloadProgress(AbstractDownload download, AudioModel model, int receivedBytes, int totalBytes) {
         if (mTrackLimiter.tryAcquire()) {
-            mSpeedSamples.remove(0); mSpeedSamples.add(receivedBytes - (int) mReceivedBytes);
-
-            mDownloadSpeed = calculateDownloadSpeed();
-            mEstimatedTime = calculateEstimatedTime();
+            mSpeedSamples.remove(0);
+            mSpeedSamples.add(receivedBytes - (int) mReceivedBytes);
             mReceivedBytes = receivedBytes;
 
-            syncerProgressChanged.setDownloadSpeed(mDownloadSpeed);
-            syncerProgressChanged.setEstimatedTime(mEstimatedTime);
-
-            EventBus.getDefault().postSticky(syncerProgressChanged);
+            measureProgress();
         }
     }
 
     private void index() throws IOException {
         stop(STATE_INDEXING);
 
-        mDownloads.clear(); mAdsIndexer.index(); mTracksIndexer.index();
+        synchronized (mLock) {
+            mDownloads.clear();
+            mAdsIndexer.index();
+            mTracksIndexer.index();
 
-        for (AudioModel model : mAdsIndexer.getRemotedQueue()) {
-            mDownloads.add(new Download(mContext, model, this));
-        }
+            for (Ad model : mAdsIndexer.getRemotedQueue()) {
+                mDownloads.add(new AdDownload(mContext, model, this));
+            }
 
-        for (AudioModel model : mTracksIndexer.getBalancedRemotedQueue()) {
-            mDownloads.add(new Download(mContext, model, this));
+            for (Track model : mTracksIndexer.getBalancedRemotedQueue()) {
+                mDownloads.add(new TrackDownload(mContext, model, this));
+            }
+
+            Collections.reverse(mDownloads);
+
+            measurePercent();
         }
     }
 
-    private void fetch() throws IOException {
-        stop(STATE_SYNCING);
+    private void fetch() throws InterruptedIOException {
+        setState(STATE_SYNCING);
 
-        for (Download download : mDownloads) {
-            check(); throwOnInterrupt();
+        synchronized (mLock) {
+            for (AbstractDownload download : mDownloads) {
+                check();
+                throwOnInterrupt();
 
-            (mCurrentDownload = download).start();
+                Log.d(TAG, "download " + mDownloads.indexOf(download) + "/" + mDownloads.size() + "/" + mTracksIndexer.getTotalCount());
+
+                (mCurrentDownload = download).start();
+            }
         }
     }
 
     private void check() {
         if (!StorageUtils.isExternalStorageWritable()) {
             stop(STATE_FAILED_NO_STORAGE);
-        } else
-
-        if (!StorageUtils.isFreeSpaceEnough()) {
+        } else if (!StorageUtils.isFreeSpaceEnough()) {
             stop(STATE_FAILED_NO_SPACE);
-        } else
-
-        if (!NetworkUtils.isNetworkConnected()) {
+        } else if (!NetworkUtils.isNetworkConnected()) {
             stop(STATE_IDLE_NO_INTERNET);
         }
     }
@@ -211,22 +284,24 @@ public class Syncer implements Download.OnProgressListener {
     }
 
     public void setIndexers(TracksIndexer tracksIndexer, AdsIndexer adsIndexer) {
-        mTracksIndexer = tracksIndexer; mAdsIndexer = adsIndexer;
+        mTracksIndexer = tracksIndexer;
+        mAdsIndexer    = adsIndexer;
     }
 
     private Byte calculateSyncedPercent() {
-        double persistedBytes = mTracksIndexer.getPersistedBytes() + mAdsIndexer.getPersistedBytes();
-        double totalBytes     = mTracksIndexer.getTotalBytes()     + mAdsIndexer.getTotalBytes();
+        long persistedBytes = mTracksIndexer.getPersistedBytes() + mAdsIndexer.getPersistedBytes();
+        long totalBytes = mTracksIndexer.getTotalBytes() + mAdsIndexer.getTotalBytes();
 
-        if (totalBytes == 0) {
+        if (totalBytes == persistedBytes) {
             return (byte) 100;
         } else {
-            return (byte) (persistedBytes / totalBytes * 100);
+            return (byte) (persistedBytes * 100 / totalBytes);
         }
     }
 
     private Long calculateDownloadSpeed() {
-        long receivedBytes = 0; for (int sample : mSpeedSamples) {
+        long receivedBytes = 0;
+        for (int sample : mSpeedSamples) {
             receivedBytes += sample;
         }
 
@@ -243,15 +318,31 @@ public class Syncer implements Download.OnProgressListener {
         }
     }
 
+    private final Events.SyncerProgressChanged syncerProgressChanged = new Events.SyncerProgressChanged();
+
     private void measureProgress() {
         mDownloadSpeed = calculateDownloadSpeed();
         mEstimatedTime = calculateEstimatedTime();
-        mSyncedPercent = calculateSyncedPercent();
 
         syncerProgressChanged.setDownloadSpeed(mDownloadSpeed);
         syncerProgressChanged.setEstimatedTime(mEstimatedTime);
 
         EventBus.getDefault().postSticky(syncerProgressChanged);
+    }
+
+    private void measurePercent() {
+        mSyncedPercent = calculateSyncedPercent();
+
         EventBus.getDefault().postSticky(new Events.SyncerSyncedPercentChanged(mSyncedPercent));
+    }
+
+    private void resync() {
+        Runnable resync = new Runnable() {
+            public void run() {
+                mContext.startService(new Intent(mContext, DownloadService.class));
+            }
+        };
+
+        mBackoff.postDelayed(resync, 10000);
     }
 }

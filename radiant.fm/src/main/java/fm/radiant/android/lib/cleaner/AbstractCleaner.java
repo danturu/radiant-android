@@ -10,6 +10,7 @@ import org.apache.commons.io.filefilter.NameFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -25,13 +26,20 @@ public abstract class AbstractCleaner {
     }
 
     public void clean() {
-        if (!mDirectory.isDirectory()) return;
-
         if (mQueue.isEmpty()) {
             FileUtils.deleteQuietly(mDirectory);
         } else {
-            for (File expiredFile : getExpiredFiles()) { FileUtils.deleteQuietly(expiredFile); }
+            if (mDirectory.isDirectory()) for (File expiredFile : getExpiredFiles()) {
+                FileUtils.deleteQuietly(expiredFile);
+            }
         }
+
+        // Hide media files from scanners.
+
+        try {
+            File hideFlag = new File(mDirectory, ".nomedia");
+            FileUtils.touch(hideFlag);
+        } catch (IOException ignored) { }
     }
 
     protected Collection<File> getExpiredFiles() {

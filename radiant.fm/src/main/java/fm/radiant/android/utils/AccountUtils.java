@@ -1,6 +1,7 @@
 package fm.radiant.android.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -10,11 +11,10 @@ import org.joda.time.DateTime;
 
 import java.io.IOException;
 
-import de.greenrobot.event.EventBus;
 import fm.radiant.android.Config;
-import fm.radiant.android.Events;
 import fm.radiant.android.models.Device;
 import fm.radiant.android.models.Place;
+import fm.radiant.android.services.SetupService;
 
 public class AccountUtils {
     private static final String TAG = "AccountUtils";
@@ -77,7 +77,8 @@ public class AccountUtils {
 
                 preferences.edit().putString(PROPERTY_SYNCED_AT, new DateTime().toString()).commit();
 
-                EventBus.getDefault().postSticky(new Events.PlaceChangedEvent(place));
+                Intent intent = new Intent(context, SetupService.class);
+                context.startService(intent);
 
                 Log.i(TAG, "Place was synced");
             } else {
@@ -86,10 +87,6 @@ public class AccountUtils {
         }
 
         return request.code();
-    }
-
-    public static boolean isValidPair(String uuid, String password) {
-        return true;
     }
 
     public static void teardown() {

@@ -2,16 +2,30 @@ package fm.radiant.android.lib.player;
 
 import android.app.AlarmManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Handler;
+import android.util.Log;
+import android.util.SparseIntArray;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.math.RandomUtils;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import de.greenrobot.event.EventBus;
 import fm.radiant.android.Events;
+import fm.radiant.android.Radiant;
 import fm.radiant.android.lib.indexer.AdsIndexer;
 import fm.radiant.android.lib.indexer.TracksIndexer;
 import fm.radiant.android.lib.syncer.Syncer;
@@ -21,10 +35,9 @@ import fm.radiant.android.models.Period;
 import fm.radiant.android.models.Style;
 import fm.radiant.android.models.Track;
 import fm.radiant.android.receivers.ScheduleReceiver;
-import fm.radiant.android.utils.LibraryUtils;
-import fm.radiant.android.utils.NetworkUtils;
 
 public class Player {
+    public static final String TAG = Player.class.getSimpleName();
     public static final int   VALUE_FADE_DURATION       = 3000;
     public static final float VALUE_STREAM_TRACKS_RATIO = 0.5f;
 
@@ -34,6 +47,7 @@ public class Player {
     public static final byte STATE_IDLE_PERIODS_REQUIRED = 0x4;
     public static final byte STATE_STOPPED               = 0x5;
 
+    private static volatile Player instance;
     private final Context      mContext;
     private final AudioManager mAudioManager;
     private final AlarmManager mAlarmManager;
@@ -59,10 +73,28 @@ public class Player {
     private final Handler mTimer = new Handler();
     private final Lock    mLock  = new ReentrantLock();
 
-    public Player(Context context) {
-        mContext      = context;
+    public static Player getInstance() {
+        Player localInstance = instance;
+
+        if (localInstance == null) {
+            synchronized (Syncer.class) {
+                localInstance = instance;
+
+                if (localInstance == null) {
+                    instance = localInstance = new Player(Radiant.getContext());
+                }
+            }
+        }
+
+        return localInstance;
+    }
+
+    private Player(Context context) {
+        mContext = context;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        prepareStore();
 
         mDeckA = new Deck(context); mCurrentDeck = mDeckA;
         mDeckB = new Deck(context);
@@ -221,13 +253,7 @@ public class Player {
     }
 
     public boolean isMusicEnough() {
-        double ratio = 0;
-
-        for (Integer styleId : mTracksIndexer.getStyleIds()) {
-            ratio += (double) mTracksIndexer.getPersistedMinutes(styleId) / mTracksIndexer.getTotalMinutes(styleId);
-        }
-
-        return ratio / mTracksIndexer.getStyleIds().size() > VALUE_STREAM_TRACKS_RATIO;
+        return mTracksIndexer.isMusicEnough();
     }
 
     public void setSyncer(Syncer syncer) {
@@ -312,7 +338,39 @@ public class Player {
         EventBus.getDefault().postSticky(new Events.PlayerStateChanged(mCurrentState));
     }
 
-    private Track getRandomTrack(Period period) {
+    // smart play here...
+
+    private static SharedPreferences mIndexStore;
+    private static String TAG_INDEX = "player_index";
+    private static String TAG_INDEX_PLAYED_AT = "player_index_played_at";
+    private SparseIntArray mPlayedAtIndex = new SparseIntArray();
+
+    private Comparator<Track> trackByPlayedAtComparator = new Comparator<Track>() {
+        public int compare(Track first, Track second) {
+            return ObjectUtils.compare(mPlayedAtIndex.get(first.getId(), 0), mPlayedAtIndex.get(second.getId(), 0));
+        }
+    };
+
+    private void prepareStore() {
+        mIndexStore = mContext.getSharedPreferences(TAG_INDEX, Context.MODE_PRIVATE);
+
+        for (Map.Entry<String, ?> entry : mIndexStore.getAll().entrySet()) {
+            String key = entry.getKey();
+
+            if (!key.startsWith(TAG_INDEX_PLAYED_AT)) continue;
+
+            try {
+                Integer id = Integer.valueOf(key.substring(TAG_INDEX_PLAYED_AT.length()));
+                mPlayedAtIndex.put(id, (Integer) entry.getValue());
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Could not load some index (key=" + key + ")", e);
+            } catch (ClassCastException e) {
+                Log.e(TAG, "Could not load some index (key=" + key + ")", e);
+            }
+        }
+    }
+
+    private Track getRandomTrack(final Period period) {
         List<Track> queue;
 
         if (isMusicEnough()) {
@@ -321,6 +379,32 @@ public class Player {
             queue = mTracksIndexer.getQueue();
         }
 
-        return Track.getRandom(queue, period.getGenre().getStyles());
+        List<Track> filtered = Lists.newArrayList(Iterables.filter(queue, new Predicate<Track>() {
+            List<Integer> styleIds = Style.collectIds(period.getGenre().getStyles());
+
+            @Override
+            public boolean apply(Track track) {
+                return styleIds.contains(track.getStyleId());
+            }
+        }));
+
+        Collections.sort(filtered, trackByPlayedAtComparator);
+
+        for (Track f : filtered) {
+            Log.d("now play", f.getStringId() + " / " + mPlayedAtIndex.get(f.getId()));
+        }
+
+        Track trackToPlay = filtered.get(RandomUtils.nextInt(Math.min(5, filtered.size())));
+        Integer now = (int) (System.currentTimeMillis() / 1000 / 60);
+
+        // put to array
+
+        mPlayedAtIndex.put(trackToPlay.getId(), now);
+
+        // put to xml
+
+        mIndexStore.edit().putInt(TAG_INDEX_PLAYED_AT + trackToPlay.getId(), now).commit();
+
+        return trackToPlay;
     }
 }

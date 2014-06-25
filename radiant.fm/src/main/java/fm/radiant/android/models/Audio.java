@@ -36,12 +36,10 @@ public class Audio {
     }
 
     public Integer getTimeInSeconds() {
-        return getTime() / 60000;
+        return getTime() / 1000;
     }
 
     public Integer getSize() {
         return size;
     }
-
-
 }

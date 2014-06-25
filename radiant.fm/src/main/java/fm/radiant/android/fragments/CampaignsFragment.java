@@ -3,6 +3,7 @@ package fm.radiant.android.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,13 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fm.radiant.android.Events;
-import fm.radiant.android.MainActivity;
 import fm.radiant.android.R;
 import fm.radiant.android.Radiant;
 import fm.radiant.android.lib.EventBusFragment;
 import fm.radiant.android.lib.TypefaceCache;
 import fm.radiant.android.models.Campaign;
-import fm.radiant.android.models.Period;
 
 
 public class CampaignsFragment extends EventBusFragment {
@@ -37,6 +36,11 @@ public class CampaignsFragment extends EventBusFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_campaigns, container, false);
 
+        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        actionBar.show();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(Radiant.formatHeader(getString(R.string.title_campaigns)));
+
         setHasOptionsMenu(true);
 
         mCampaignsAdapter = new CampaignsAdapter(getActivity().getApplicationContext());
@@ -47,9 +51,6 @@ public class CampaignsFragment extends EventBusFragment {
         mCampaignsView = (ListView) view.findViewById(R.id.campaigns);
         mCampaignsView.setAdapter(mCampaignsAdapter);
         mCampaignsView.setEmptyView(emptyView);
-
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(Radiant.formatHeader(getString(R.string.title_campaigns)));
 
         return view;
     }
@@ -84,7 +85,7 @@ public class CampaignsFragment extends EventBusFragment {
     private void openPreferencesFragment() {
         FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
-        transaction.replace(MainActivity.getContentViewCompat(), new PreferencesFragment(), PreferencesFragment.TAG);
+        transaction.replace(android.R.id.content, new PreferencesFragment(), PreferencesFragment.TAG);
         transaction.addToBackStack(PeriodsFragment.TAG);
         transaction.commit();
     }

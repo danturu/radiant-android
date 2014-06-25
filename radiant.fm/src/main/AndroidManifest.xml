@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="fm.radiant.android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="fm.radiant.android">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -11,18 +10,15 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="com.example.gcm.permission.C2D_MESSAGE" />
+    <uses-permission android:name="${packageName}.permission.C2D_MESSAGE" />
 
-    <permission
-        android:name="fm.radiant.android.gcm.permission.C2D_MESSAGE"
-        android:protectionLevel="signature" />
+    <permission android:name="${packageName}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
 
     <application
-        android:name="fm.radiant.android.Radiant"
+        android:name=".Radiant"
         android:allowBackup="true"
         android:icon="@drawable/icon_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/CustomTheme">
+        android:label="@string/app_name">
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -31,7 +27,8 @@
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/CustomTheme">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,7 +39,8 @@
         <activity
             android:name=".AuthActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/CustomThemeNoActionBar" />
 
         <receiver
             android:name=".receivers.MessagesReceiver"
@@ -50,7 +48,7 @@
 
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="fm.radiant.android.gcm" />
+                <category android:name="${packageName}" />
             </intent-filter>
         </receiver>
 
@@ -64,5 +62,6 @@
 
         <service android:name=".services.MessagesService" />
         <service android:name=".services.DownloadService" />
+        <service android:name=".services.SetupService" />
     </application>
 </manifest>

@@ -8,13 +8,17 @@ import com.github.kevinsawicki.http.HttpRequest;
 
 import java.io.IOException;
 
+import de.greenrobot.event.EventBus;
+import fm.radiant.android.Events;
+import fm.radiant.android.lib.syncer.Syncer;
 import fm.radiant.android.utils.AccountUtils;
 
 public class SyncTask extends AsyncTask<Void, Void, Integer> {
     private static final String TAG = SyncTask.class.getSimpleName();
 
-    private static final int RESULT_SUCCESS = 200;
-    private static final int RESULT_FAIL    = 0;
+    private static final int RESULT_SUCCESS      = 200;
+    private static final int RESULT_UNAUTHORIZED = 401;
+    private static final int RESULT_FAIL         = 0;
 
     private static Handler backoff = new Handler();
 
@@ -38,13 +42,26 @@ public class SyncTask extends AsyncTask<Void, Void, Integer> {
 
     @Override
     protected void onPostExecute(Integer resultCode) {
-        if (resultCode == RESULT_SUCCESS) {
-            return;
-        }
+        switch (resultCode) {
+            case RESULT_UNAUTHORIZED:
+                EventBus.getDefault().postSticky(new Events.PlaceUnpairedEvent());
+                return;
 
+            case RESULT_SUCCESS:
+                return;
+
+            default:
+                resync();
+                return;
+        }
+    }
+
+    private void resync() {
         Runnable resync = new Runnable(){
             public void run() {
-                new SyncTask().execute();
+                if (Syncer.getInstance().getState() != Syncer.STATE_STOPPED && AccountUtils.isLoggedIn()) {
+                    new SyncTask().execute();
+                }
             }
         };
 

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import fm.radiant.android.lib.syncer.Syncer;
+
 import static fm.radiant.android.lib.syncer.Syncer.STATE_STOPPED;
 
 public class NetworkUtils {
@@ -24,6 +26,6 @@ public class NetworkUtils {
     }
 
     public static boolean canUseNetwork() {
-        return LibraryUtils.getSyncer().getState() != STATE_STOPPED;
+        return Syncer.getInstance().getState() != STATE_STOPPED;
     }
 }

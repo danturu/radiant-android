@@ -1,5 +1,6 @@
 package fm.radiant.android;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -16,10 +17,11 @@ import org.apache.commons.lang.math.RandomUtils;
 
 import java.util.UUID;
 
-import fm.radiant.android.R;
 import fm.radiant.android.tasks.PairTask;
 
 public class AuthActivity extends ActionBarActivity implements TextView.OnEditorActionListener, Button.OnClickListener {
+    public static final String EXTRA_UNPAIRED_BY_USER = "1";
+
     private EditText inputPassword;
     private Button buttonSignin;
     private Button buttonSignup;
@@ -46,6 +48,10 @@ public class AuthActivity extends ActionBarActivity implements TextView.OnEditor
         buttonSignup = (Button) findViewById(R.id.button_signup);
         buttonSignup.setTypeface(font);
         buttonSignup.setOnClickListener(this);
+
+        if (!getIntent().getBooleanExtra(EXTRA_UNPAIRED_BY_USER, true)) {
+            showUnpairExplanation();
+        }
     }
 
     @Override
@@ -82,5 +88,12 @@ public class AuthActivity extends ActionBarActivity implements TextView.OnEditor
     private void signup() {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://help.radiant.fm"));
         startActivity(browserIntent);
+    }
+
+    private void showUnpairExplanation() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage(R.string.message_device_was_unpaired_by_server);
+        alertDialog.setNeutralButton(R.string.button_ok, null);
+        alertDialog.show();
     }
 }

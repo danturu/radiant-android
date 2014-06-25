@@ -71,6 +71,7 @@ public class MessagesUtils {
 
     public static void unregister() throws IOException {
         GoogleCloudMessaging.getInstance(context).unregister();
+        GoogleCloudMessaging.getInstance(context).close();
     }
 
     public static void teardown() {

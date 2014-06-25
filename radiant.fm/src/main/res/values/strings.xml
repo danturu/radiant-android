@@ -23,16 +23,18 @@
     <string name="message_server_fault">Произошла неизвестная ошибка. Повторите попытку.</string>
     <string name="message_network_error">Отсутствует подключение к интернету. Подключитесь и повторите попытку.</string>
     <string name="message_empty_schedule">Похоже, что вы еще не выбрали музыку.</string>
-    <string name="message_turn_on_sync_to_play">Вкл синк.</string>
-    <string name="message_turn_off_will_stop_music">Выключение синзронизации остановить музыку.</string>
+    <string name="message_turn_on_sync_to_play">Недостаточно музыки для воспроизведения. Включить синхронизцию?</string>
+    <string name="message_turn_off_will_stop_music">Выключение синхронизации остановит музыку. Дождитесь ее завершения.</string>
     <string name="message_syncer_state_synced">Музыка обновлена. Все работает.</string>
-    <string name="message_syncer_state_indexing">Подготвка к обновлению. Все работает.</string>
+    <string name="message_syncer_state_indexing">Подготовка к обновлению. Все работает.</string>
     <string name="message_syncer_state_idle_no_internet">Отсутствует подключение к интернету.</string>
     <string name="message_syncer_state_failed_no_space">Обновлена невозможно. Нет места на карте.</string>
     <string name="message_syncer_state_failed_no_storage">Обновлена невозможно. SD-карта не установленна.</string>
     <string name="message_syncer_state_stopped">Синхронизация выключена.</string>
-    <string name="message_player_will_stream">Плеер будет стримить.</string>
+    <string name="message_player_will_stream">Плеер будет стримить. Пожалуйста, подождите...</string>
     <string name="message_player_no_internet">Нет интернета для стриминга.</string>
     <string name="message_empty_periods_list">НЕТ РЕКЛАМНЫХ АУДИОРОЛИКОВ</string>
+    <string name="message_device_was_unpaired_by_server">На другом устройстве был использован этот пароль.</string>
+    <string name="message_unpair_will_destroy_data">Данное действие приведет к удалению всего кэша.</string>
 
 </resources>

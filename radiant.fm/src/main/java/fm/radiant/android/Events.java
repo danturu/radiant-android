@@ -16,6 +16,9 @@ public class Events {
         }
     }
 
+    public static class PlaceCachedEvent {
+    }
+
     public static class PlaceUnpairedEvent {
     }
 

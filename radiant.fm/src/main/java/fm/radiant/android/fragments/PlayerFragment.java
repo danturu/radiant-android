@@ -8,8 +8,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,9 +24,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.common.util.concurrent.RateLimiter;
+
+import java.util.concurrent.Semaphore;
 
 import fm.radiant.android.Events;
-import fm.radiant.android.MainActivity;
 import fm.radiant.android.R;
 import fm.radiant.android.Radiant;
 import fm.radiant.android.lib.EventBusFragment;
@@ -38,7 +42,6 @@ import fm.radiant.android.models.Period;
 import fm.radiant.android.models.Place;
 import fm.radiant.android.models.Style;
 import fm.radiant.android.services.DownloadService;
-import fm.radiant.android.utils.LibraryUtils;
 import fm.radiant.android.utils.NetworkUtils;
 import fm.radiant.android.utils.ParseUtils;
 
@@ -52,7 +55,8 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
     private CircleProgressBar mSyncerProgress;
     private TextView mStatusMessage;
 
-    private Player mPlayer = LibraryUtils.getPlayer();
+    private Player mPlayer = Player.getInstance();
+    private Syncer mSyncer = Syncer.getInstance();
 
     private ImageSquareButton mScheduleButton;
     private ImageSquareButton mPlayButton;
@@ -71,13 +75,13 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
         @Override
         public void handleMessage(Message msg) {
-            if (LibraryUtils.getPlayer().getState() != Player.STATE_WAITING) {
+            if (mPlayer.getState() != Player.STATE_WAITING) {
                 return;
             }
 
             if (msg.what == 0) {
                 removeCallbacksAndMessages(null);
-                time = (int) ((LibraryUtils.getPlayer().getPeriod().getDelay() - System.currentTimeMillis()) / 1000);
+                time = (int) ((mPlayer.getPeriod().getDelay() - System.currentTimeMillis()) / 1000);
             }
 
             mPlayButton.setText(ParseUtils.humanizeDurationDigit((time)));
@@ -91,7 +95,9 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_player, container, false);
 
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        actionBar.show();
+        actionBar.setDisplayHomeAsUpEnabled(false);
 
         setHasOptionsMenu(true);
 
@@ -125,20 +131,23 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
         mAnnounceButton.setOnClickListener(this);
 
         mVolumeSlider = (SeekBar) view.findViewById(R.id.slider_volume);
-        mVolumeSlider.setMax(mPlayer.getMaxVolume() * 10);
-        mVolumeSlider.setProgress(mPlayer.getVolume() * 10);
+        mVolumeSlider.setMax(mPlayer.getMaxVolume() * 5);
+        mVolumeSlider.setProgress(mPlayer.getVolume() * 5);
         mVolumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int currentVolume = 0;
+
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
+                currentVolume = mPlayer.getVolume();
             }
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int volume, boolean fromUser) {
-                mPlayer.setVolume(volume / 10);
+                if (currentVolume != volume / 5) mPlayer.setVolume(volume / 5);
             }
         });
 
@@ -168,6 +177,8 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
     @Override
     public void onResume() {
         super.onResume();
+
+        mVolumeSlider.setProgress(mPlayer.getVolume() * 5);
     }
 
     @Override
@@ -248,7 +259,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
         // color
 
-        int color = 0;
+        int color = R.color.state_blue;
         int status = R.string.empty;
 
         switch (event.getState()) {
@@ -278,7 +289,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
                 break;
 
             case Syncer.STATE_SYNCING:
-                if (LibraryUtils.getPlayer().isMusicEnough()) {
+                if (mPlayer.isMusicEnough()) {
                     color = R.color.state_green;
                 } else {
                     color = R.color.state_blue;
@@ -304,11 +315,11 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
         // color wheel
 
-        if (LibraryUtils.getSyncer().getState() != Syncer.STATE_SYNCING) return;
+        if (mPlayer.getState() != Syncer.STATE_SYNCING) return;
 
         int color;
 
-        if (LibraryUtils.getPlayer().isMusicEnough()) {
+        if (mPlayer.isMusicEnough()) {
             color = R.color.state_green;
         } else {
             color = R.color.state_blue;
@@ -349,24 +360,22 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
     }
 
     public void onEventMainThread(Events.PlayerVolumeChanged event) {
-        mVolumeSlider.setProgress(event.getVolume() * 10);
+        mVolumeSlider.setProgress(event.getVolume() * 5);
     }
 
     private void togglePlayerState() {
-        final Player player = LibraryUtils.getPlayer();
-        final Syncer syncer = LibraryUtils.getSyncer();
 
-        if (player.getState() != Player.STATE_STOPPED) {
-            player.stop();
+        if (mPlayer.getState() != Player.STATE_STOPPED) {
+            mPlayer.stop();
         } else {
             // music enought
 
-            if (player.isMusicEnough()) {
-                player.play();
+            if (mPlayer.isMusicEnough()) {
+                mPlayer.play();
             } else {
                 // sync off and not enough music
 
-                if (syncer.getState() == Syncer.STATE_STOPPED) {
+                if (mSyncer.getState() == Syncer.STATE_STOPPED) {
                     AlertDialog.Builder errorDialog = new AlertDialog.Builder(getActivity());
                     errorDialog.setMessage(R.string.message_turn_on_sync_to_play);
                     errorDialog.setPositiveButton(R.string.button_turn_on, new DialogInterface.OnClickListener() {
@@ -375,7 +384,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
                             Intent service = new Intent(getActivity(), DownloadService.class);
                             getActivity().startService(service);
 
-                            syncer.stop(Syncer.STATE_NULL);
+                            mSyncer.stop(Syncer.STATE_PREPARING);
                             togglePlayerState();
                         }
                     });
@@ -386,7 +395,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
                 // has internet and not enough music
 
                 if (NetworkUtils.isNetworkConnected()) {
-                    player.play();
+                    mPlayer.play();
 
                     Toast.makeText(getActivity(), R.string.message_player_will_stream, Toast.LENGTH_LONG).show();
                 } else
@@ -394,7 +403,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
                 // no internet and not enough music
 
                 {
-                    player.stop();
+                    mPlayer.stop();
 
                     Toast.makeText(getActivity(), R.string.message_player_no_internet, Toast.LENGTH_LONG).show();
                 }
@@ -405,7 +414,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
     private void openSchedulerFragment() {
         FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
-        transaction.replace(MainActivity.getContentViewCompat(), new PeriodsFragment(), PeriodsFragment.TAG);
+        transaction.replace(android.R.id.content, new PeriodsFragment(), PeriodsFragment.TAG);
         transaction.addToBackStack(PeriodsFragment.TAG);
         transaction.commit();
     }
@@ -413,7 +422,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
     private void openPreferencesFragment() {
         FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
-        transaction.replace(MainActivity.getContentViewCompat(), new PreferencesFragment(), PreferencesFragment.TAG);
+        transaction.replace(android.R.id.content, new PreferencesFragment(), PreferencesFragment.TAG);
         transaction.addToBackStack(PeriodsFragment.TAG);
         transaction.commit();
     }
