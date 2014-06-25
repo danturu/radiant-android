@@ -30,13 +30,14 @@ public abstract class AbstractDownload {
 
     protected final AudioModel         mModel;
     protected final OnProgressListener mEvent;
-
+    protected File mFile;
     private boolean mAborted = false;
 
     public AbstractDownload(Context context, AudioModel model, OnProgressListener event) {
         mContext = context;
         mModel   = model;
         mEvent   = event;
+        mFile    = mModel.getFile(context);
     }
 
     public void start() {
@@ -47,11 +48,15 @@ public abstract class AbstractDownload {
 
             check(tempFile);
             store(tempFile);
+
+            mEvent.onSuccess(this, mModel, mFile);
         } catch (IOException exception) {
-            Log.e(TAG, "Could not download " + mModel.getClass().getSimpleName() + " (id=" + mModel.getStringId() + "): ", exception);
+            mEvent.onFailure(this, mModel, exception);
         } finally {
             FileUtils.deleteQuietly(tempFile);
         }
+
+        mEvent.onComplete(this, mModel);
     }
 
     public void abort() {
@@ -78,14 +83,10 @@ public abstract class AbstractDownload {
             while ((bytesRead = inputStream.read(data)) != -1) {
                 throwOnInterrupt(); outputStream.write(data, 0, bytesRead);
 
-                mEvent.onDownloadProgress(this, mModel, bytesWritten += bytesRead, contentLength);
+                mEvent.onProgress(this, mModel, bytesWritten += bytesRead, contentLength);
             }
 
             outputStream.flush();
-
-            mEvent.onDownloadSuccess(this, mModel, tempFile);
-        } catch (IOException exception) {
-            mEvent.onDownloadFailure(this, mModel, exception); throw exception;
         } finally {
             IOUtils.closeQuietly(inputStream);
             IOUtils.closeQuietly(outputStream);
@@ -95,25 +96,13 @@ public abstract class AbstractDownload {
     }
 
     protected void check(File tempFile) throws IOException {
-        if (mModel.getAudio().getSize() == tempFile.length()) {
-            mEvent.onCheckSuccess(this, mModel, tempFile);
-        } else {
-            CorruptedFileException exception = new CorruptedFileException("Invalid checksum");
-
-            mEvent.onCheckFailure(this, mModel, exception); throw exception;
+        if (mModel.getAudio().getSize() != tempFile.length()) {
+            throw new CorruptedFileException();
         }
     }
 
     protected void store(File tempFile) throws IOException {
-        File audioFile = mModel.getFile(mContext);
-
-        try {
-            FileUtils.copyFile(tempFile, audioFile);
-
-            mEvent.onStoreSuccess(this, mModel, audioFile);
-        } catch (IOException exception) {
-            mEvent.onStoreFailure(this, mModel, exception);
-        }
+        FileUtils.copyFile(tempFile, mFile);
     }
 
     protected void throwOnInterrupt() throws InterruptedIOException {
@@ -121,17 +110,12 @@ public abstract class AbstractDownload {
     }
 
     public interface OnProgressListener {
-        public void onDownloadSuccess(AbstractDownload download, AudioModel model, File tempFile);
+        public void onSuccess(AbstractDownload download, AudioModel model, File tempFile);
 
+        public void onFailure(AbstractDownload download, AudioModel model, IOException exception);
 
-        public void onDownloadProgress(AbstractDownload download, AudioModel model, int receivedBytes, int totalBytes);
+        public void onComplete(AbstractDownload download, AudioModel model);
 
-        public void onCheckSuccess(AbstractDownload download, AudioModel model, File tempFile);
-
-        public void onCheckFailure(AbstractDownload download, AudioModel model, IOException exception);
-
-        public void onStoreSuccess(AbstractDownload download, AudioModel model, File audioFile);
-
-        public void onStoreFailure(AbstractDownload download, AudioModel model, IOException exception);
+        public void onProgress(AbstractDownload download, AudioModel model, int receivedBytes, int totalBytes);
     }
 }

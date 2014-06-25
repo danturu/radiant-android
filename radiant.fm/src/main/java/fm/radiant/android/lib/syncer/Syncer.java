@@ -180,27 +180,7 @@ public class Syncer implements AbstractDownload.OnProgressListener {
     }
 
     @Override
-    public void onDownloadSuccess(AbstractDownload download, AudioModel model, File tempFile) {
-        // no implementation necessary...
-    }
-
-    @Override
-    public void onDownloadFailure(AbstractDownload download, AudioModel model, IOException e) {
-        mResync = true;
-    }
-
-    @Override
-    public void onCheckSuccess(AbstractDownload download, AudioModel model, File tempFile) {
-        // no implementation necessary...
-    }
-
-    @Override
-    public void onCheckFailure(AbstractDownload download, AudioModel model, IOException exception) {
-        mResync = true;
-    }
-
-    @Override
-    public void onStoreSuccess(AbstractDownload download, AudioModel model, File file) {
+    public void onSuccess(AbstractDownload download, AudioModel model, File tempFile) {
         if (model instanceof Track) {
             mTracksIndexer.moveToPersisted(model);
         } else {
@@ -211,12 +191,18 @@ public class Syncer implements AbstractDownload.OnProgressListener {
     }
 
     @Override
-    public void onStoreFailure(AbstractDownload download, AudioModel model, IOException exception) {
+    public void onFailure(AbstractDownload download, AudioModel model, IOException exception) {
         mResync = true;
+        Log.e(TAG, "Could not download " + model.getClass().getSimpleName() + " (id=" + model.getStringId() + "): ", exception);
     }
 
     @Override
-    public void onDownloadProgress(AbstractDownload download, AudioModel model, int receivedBytes, int totalBytes) {
+    public void onComplete(AbstractDownload download, AudioModel model) {
+        mReceivedBytes = 0;
+    }
+
+    @Override
+    public void onProgress(AbstractDownload download, AudioModel model, int receivedBytes, int totalBytes) {
         if (mTrackLimiter.tryAcquire()) {
             mSpeedSamples.remove(0);
             mSpeedSamples.add(receivedBytes - (int) mReceivedBytes);
@@ -345,4 +331,5 @@ public class Syncer implements AbstractDownload.OnProgressListener {
 
         mBackoff.postDelayed(resync, 10000);
     }
+
 }
