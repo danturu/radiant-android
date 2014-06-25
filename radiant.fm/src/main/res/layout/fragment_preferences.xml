@@ -184,14 +184,13 @@
         <Button
             android:id="@+id/button_logout"
             android:layout_width="fill_parent"
-            android:layout_height="45dp"
+            android:layout_height="40dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            android:layout_marginTop="25dp"
-            android:textSize="16dp"
+            android:layout_marginTop="15dp"
+            android:textSize="17dp"
             android:background="@drawable/button_logout_background"
             android:text="Отвязать это устройство?"
-            android:textColor="#ffffff" />
-
+            android:textColor="@color/text_logout" />
     </LinearLayout>
 </ScrollView>

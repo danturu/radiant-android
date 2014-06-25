@@ -1,9 +1,6 @@
 package fm.radiant.android.lib.syncer;
 
 import android.content.Context;
-import android.util.Log;
-
-import com.github.kevinsawicki.http.HttpRequest;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -16,9 +13,6 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.GeneralSecurityException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import fm.radiant.android.lib.CorruptedFileException;
 import fm.radiant.android.models.AudioModel;

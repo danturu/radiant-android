@@ -2,9 +2,7 @@ package fm.radiant.android.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.util.Log;
 
-import de.greenrobot.event.EventBus;
 import fm.radiant.android.lib.syncer.Syncer;
 
 public class DownloadService extends IntentService {

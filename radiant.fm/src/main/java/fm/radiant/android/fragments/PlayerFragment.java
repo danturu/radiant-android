@@ -11,7 +11,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -24,10 +23,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.common.util.concurrent.RateLimiter;
-
-import java.util.concurrent.Semaphore;
-
 import fm.radiant.android.Events;
 import fm.radiant.android.R;
 import fm.radiant.android.Radiant;
@@ -35,7 +30,6 @@ import fm.radiant.android.lib.EventBusFragment;
 import fm.radiant.android.lib.TypefaceCache;
 import fm.radiant.android.lib.player.Player;
 import fm.radiant.android.lib.syncer.Syncer;
-import fm.radiant.android.lib.widgets.AutoScrollTextView;
 import fm.radiant.android.lib.widgets.CircleProgressBar;
 import fm.radiant.android.lib.widgets.ImageSquareButton;
 import fm.radiant.android.models.Period;
@@ -67,8 +61,8 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
     private View     mPeriodView;
     private TextView mPeriodTime;
-    private AutoScrollTextView mPeriodDescription;
-    private AutoScrollTextView mPeriodStyles;
+    private TextView mPeriodDescription;
+    private TextView mPeriodStyles;
 
     private Handler playInTimer = new Handler() {
         int time = 0;
@@ -163,13 +157,13 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
         mPeriodTime = (TextView) view.findViewById(R.id.text_period_time);
         mPeriodTime.setTypeface(TypefaceCache.get(TypefaceCache.FONT_PLUMB_LIGHT));
 
-        mPeriodStyles = (AutoScrollTextView) view.findViewById(R.id.text_period_styles);
+        mPeriodStyles = (TextView) view.findViewById(R.id.text_period_styles);
         mPeriodStyles.setTypeface(TypefaceCache.get(TypefaceCache.FONT_PLUMB_LIGHT));
-        mPeriodStyles.setTimePerLetter(600);
+        // mPeriodStyles.setTimePerLetter(600);
 
-        mPeriodDescription = (AutoScrollTextView) view.findViewById(R.id.text_period_description);
+        mPeriodDescription = (TextView) view.findViewById(R.id.text_period_description);
         mPeriodDescription.setTypeface(museo500);
-        mPeriodDescription.setTimePerLetter(250);
+        // mPeriodDescription.setTimePerLetter(250);
 
         return view;
     }
@@ -238,7 +232,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
             int px = (int) TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
-                    8,
+                    12,
                     getResources().getDisplayMetrics());
 
             layoutParams.setMargins(px, 0, px, 0);
@@ -249,7 +243,7 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
             int px = (int) TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
-                    16,
+                    24,
                     getResources().getDisplayMetrics());
 
             layoutParams.setMargins(0, 0, px, 0);
@@ -438,18 +432,22 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
         if (period == null) {
             getView().findViewById(R.id.view_empty_period).setVisibility(View.VISIBLE);
-            getView().findViewById(R.id.view_normal_period).setVisibility(View.GONE);
+            getView().findViewById(R.id.text_period_time).setVisibility(View.GONE);
+            getView().findViewById(R.id.text_period_styles).setVisibility(View.GONE);
+            getView().findViewById(R.id.text_period_description).setVisibility(View.GONE);
         } else {
             getView().findViewById(R.id.view_empty_period).setVisibility(View.GONE);
-            getView().findViewById(R.id.view_normal_period).setVisibility(View.VISIBLE);
+            getView().findViewById(R.id.text_period_time).setVisibility(View.VISIBLE);
+            getView().findViewById(R.id.text_period_styles).setVisibility(View.VISIBLE);
+            getView().findViewById(R.id.text_period_description).setVisibility(View.VISIBLE);
 
             mPeriodTime.setText(ParseUtils.humanizeDay(period.getDay(), true).toUpperCase() + " / " + ParseUtils.humanizeTimeRange(period.getStartAt(), period.getEndAt()));
 
             mPeriodDescription.setText(period.getGenre().getDescription());
-            mPeriodDescription.startScroll();
+            // mPeriodDescription.startScroll();
 
             mPeriodStyles.setText(TextUtils.join(" / ", Style.collectNames(period.getGenre().getStyles())));
-            mPeriodStyles.startScroll();
+            // mPeriodStyles.startScroll();
         }
     }
 
@@ -468,22 +466,22 @@ public class PlayerFragment extends EventBusFragment implements View.OnClickList
 
             switch (index) {
                 case 0:
-                    d = R.drawable.player_cover_fade_1;
+                    d = R.drawable.player_cover_fade_vertical_1;
                     break;
                 case 1:
-                    d = R.drawable.player_cover_fade_2;
+                    d = R.drawable.player_cover_fade_vertical_2;
                     break;
                 case 2:
-                    d = R.drawable.player_cover_fade_3;
+                    d = R.drawable.player_cover_fade_vertical_3;
                     break;
                 case 3:
-                    d = R.drawable.player_cover_fade_4;
+                    d = R.drawable.player_cover_fade_vertical_4;
                     break;
                 case 4:
-                    d = R.drawable.player_cover_fade_5;
+                    d = R.drawable.player_cover_fade_vertical_5;
                     break;
                 case 5:
-                    d = R.drawable.player_cover_fade_6;
+                    d = R.drawable.player_cover_fade_vertical_6;
                     break;
             }
 

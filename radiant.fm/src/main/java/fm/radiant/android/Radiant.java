@@ -9,7 +9,6 @@ import android.text.SpannableString;
 import fm.radiant.android.lib.TypefaceCache;
 import fm.radiant.android.lib.TypefaceSpan;
 import fm.radiant.android.services.SetupService;
-import fm.radiant.android.tasks.SyncTask;
 import fm.radiant.android.utils.AccountUtils;
 import fm.radiant.android.utils.CommonUtils;
 import fm.radiant.android.utils.MessagesUtils;

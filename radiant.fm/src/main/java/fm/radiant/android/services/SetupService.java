@@ -2,7 +2,6 @@ package fm.radiant.android.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.util.Log;
 
 import de.greenrobot.event.EventBus;
 import fm.radiant.android.Events;
@@ -34,8 +33,6 @@ public class SetupService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         sComplete = false;
-
-        Log.d("eventbusmain", ""+ EventBus.getDefault().hashCode());
 
         Place place = AccountUtils.getPlace();
 

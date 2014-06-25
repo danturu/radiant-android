@@ -2,7 +2,6 @@ package fm.radiant.android.fragments;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -25,7 +24,6 @@ import fm.radiant.android.lib.EventBusFragment;
 import fm.radiant.android.lib.TypefaceCache;
 import fm.radiant.android.lib.player.Player;
 import fm.radiant.android.lib.syncer.Syncer;
-import fm.radiant.android.services.DownloadService;
 import fm.radiant.android.tasks.SyncTask;
 import fm.radiant.android.tasks.UnpairTask;
 import fm.radiant.android.utils.AccountUtils;
@@ -77,7 +75,7 @@ public class PreferencesFragment extends EventBusFragment implements View.OnClic
         mSyncHeader = (TextView) view.findViewById(R.id.text_header_sync);
         mSyncHeader.setTypeface(museo500);
 
-        mHeaderSyncOn = (TextView) view.findViewById(R.id.header_synced_percent);
+        mHeaderSyncOn = (TextView) view.findViewById(R.id.header_sync_on);
         mHeaderSyncOn.setTypeface(museo500);
 
         mSwitchSyncOn = (ToggleButton) view.findViewById(R.id.button_sync_on);

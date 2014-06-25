@@ -26,9 +26,9 @@ public class ImageSquareButton extends Button {
 
         final TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.ImageSquareButton, defStyle, 0);
 
-       if (attributes.hasValue(R.styleable.ImageSquareButton_drawableCenter)) {
+        if (attributes.hasValue(R.styleable.ImageSquareButton_drawableCenter)) {
            setDrawableCenter(attributes.getDrawable(R.styleable.ImageSquareButton_drawableCenter));
-       }
+        }
     }
 
     @Override
@@ -42,7 +42,7 @@ public class ImageSquareButton extends Button {
 
         if (mDrawableCenter != null)  {
             canvas.save();
-            canvas.translate((canvas.getWidth() / 2) - mDrawableCenter.getIntrinsicWidth()/2, (canvas.getHeight() / 2) - mDrawableCenter.getIntrinsicHeight()/2);
+            canvas.translate((((float) getWidth()) / 2) - ((float) mDrawableCenter.getIntrinsicWidth()) / 2, (((float)getHeight()) / 2) - ((float) mDrawableCenter.getIntrinsicHeight()) / 2);
             mDrawableCenter.draw(canvas);
             canvas.restore();
         }
