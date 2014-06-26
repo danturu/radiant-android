@@ -13,8 +13,8 @@ android {
 
     buildTypes {
         release {
-            runProguard true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            runProguard false
+            proguardFiles 'proguard-rules.txt'
         }
     }
 
@@ -58,6 +58,7 @@ dependencies {
     compile 'com.google.guava:guava-jdk5:17.0'
     compile 'com.google.code.gson:gson:2.2.4'
     compile 'de.greenrobot:eventbus:2.2.1'
-    compile 'com.squareup.retrofit:retrofit:1.5.1'
-    compile 'com.couchbase.cblite:CBLite:1.0.0-beta2'
+    // compile 'com.squareup.retrofit:retrofit:1.5.1'
+    compile 'com.google.code.findbugs:jsr305:2.0.2'
+    compile 'org.joda:joda-convert:1.6'
 }

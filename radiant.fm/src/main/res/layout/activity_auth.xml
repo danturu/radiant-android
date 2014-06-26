@@ -41,7 +41,8 @@
                 android:hint="@string/placeholder_password"
                 android:textColorHint="#80000000"
                 android:inputType="textPassword|textCapCharacters"
-                android:textSize="19dp" />
+                android:textSize="19dp"
+                android:text="BBA580BA" />
         </FrameLayout>
 
         <FrameLayout
