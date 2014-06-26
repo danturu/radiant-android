@@ -94,6 +94,8 @@ public class Syncer implements AbstractDownload.OnProgressListener {
     }
 
     public void stopService(byte state) {
+        if (mCurrentState == state) return;
+
         Intent service = new Intent(mContext, DownloadService.class);
         mContext.stopService(service);
 
@@ -238,11 +240,10 @@ public class Syncer implements AbstractDownload.OnProgressListener {
         setState(STATE_SYNCING);
 
         synchronized (mLock) {
-            for (AbstractDownload download : mDownloads) {
-                check();
-                throwOnInterrupt();
+            check(); throwOnInterrupt();
 
-                Log.d(TAG, "download " + mDownloads.indexOf(download) + "/" + mDownloads.size() + "/" + mTracksIndexer.getTotalCount());
+            for (AbstractDownload download : mDownloads) {
+                check(); throwOnInterrupt();
 
                 (mCurrentDownload = download).start();
             }

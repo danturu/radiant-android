@@ -16,11 +16,16 @@ public class NetworkReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, Intent intent) {
+        if (!AccountUtils.isLoggedIn()) return;
+
         // restart download service
 
-        if (NetworkUtils.isNetworkConnected() && AccountUtils.isLoggedIn() && mPlayer.getState() != Syncer.STATE_STOPPED) {
-            Intent service = new Intent(context, DownloadService.class);
-            context.startService(service);
+        if (mSyncer.getState() != Syncer.STATE_STOPPED) {
+            if (NetworkUtils.isNetworkConnected()) {
+                mSyncer.startService();
+            } else {
+                mSyncer.stopService(Syncer.STATE_IDLE_NO_INTERNET);
+            }
         }
     }
 }

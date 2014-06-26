@@ -3,6 +3,7 @@ package fm.radiant.android.utils;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.Log;
 
 import fm.radiant.android.lib.syncer.Syncer;
 
@@ -22,6 +23,15 @@ public class NetworkUtils {
 
         // there can be no active network...
 
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            Log.d("sdcsdc", "connected");
+            Log.d("sdcsdc", "connected");
+            Log.d("sdcsdc", "connected");
+        } else {
+            Log.d("sdcsdc", "noconnected");
+            Log.d("sdcsdc", "noconnected");
+            Log.d("sdcsdc", "noconnected");
+        }
         return activeNetwork != null && activeNetwork.isConnected();
     }
 
