@@ -1,7 +1,0 @@
-int attr autoStart 0x7f010002
-int attr pause 0x7f010001
-int attr speed 0x7f010000
-int[] styleable asia_ivity_android_marqueeview_MarqueeView { 0x7f010000, 0x7f010001, 0x7f010002 }
-int styleable asia_ivity_android_marqueeview_MarqueeView_autoStart 2
-int styleable asia_ivity_android_marqueeview_MarqueeView_pause 1
-int styleable asia_ivity_android_marqueeview_MarqueeView_speed 0
